@@ -1,17 +1,16 @@
 # Tasmota-SomfyRTS
 Berry script to to control Somfy powered blinds using Tasmota.
 
-## Capabilities:
+## Capabilities
 - This enables you to emulate any number of Somfy RTS Remotes Control units to control any number of Somfy-powered shades/blinds that use the 433MHz Somfy RTS protocol.
 - Tasmota compatibility:
   - It requires an ESP32 running tasmota32-ir.bin V12.0.2 or later.
   - It requires a 433MHz transmitter module such as the FS1000A. Ideally, the FS1000A should be modified to transmit at 433.42MHz.
-  - I don't know if it can be used in conjunction with Tasmota's blinds and shutters functionality.
-  - I don't know if using it with Tasmota's blinds and shutters functionality would limit it to a single Id.
+  - I don't know if it can be integrated into Tasmota's blinds and shutters functionality. At minimum, it would need the ```RollingCode``` logic to be implemented in the ESP32.
 - You will need some logic on the host that keeps track of the ```RollingCode```, and increments it each time you send a command.
-  - You could add code to bRFsendCustom_V1.be to do this for you on the ESP32, but (1) it must use the ESPs' persistent storage, and (2) you need to maintain a separate RollingCode for each Id that you use.
+  - You could add logic to bRFsendCustom_V1.be to do this for you on the ESP32, but (1) it would need to use the ESPs' persistent storage, and (2) you would need to maintain a separate ```RollingCode``` for each ```Id``` that you use.
   
-## To demonstrate operation:
+## To demonstrate operation
 - Set up the Tasmota device:
   - Take an ESP32 module and install tasmota32-ir.bin V12.0.2 or later.
   - Upload these scripts ```bRFsendCustom_V1.be``` and ```autoexec.be``` to Tasmota's file system. (These scripts will be here soon)
