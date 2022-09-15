@@ -34,11 +34,11 @@ Berry script to to control Somfy powered blinds using Tasmota.
   - Roll down: ```RFtxSMFY {"Id":123,"RollingCode":3,"Button":4}```
   - Remember to increment the RollingCode each time you issue a command.
   
-  ## Command parameters
-  - ```RFtxSMFY {"Id":123,"RollingCode":6,"Button":2,"StopAfterMs":2500}```
-  - ```Id``` The Id of this virtual controller; you will pair the blind with this Id. It should be different to the Id of any other controllers you have. Use as many Ids as you need.
-  - ```RollingCode``` For each Id that you use, increment the rolling code each time you send a command. This is part of the Somfy RTS protocol.
-  - ```Button``` The buttons on the Somfy Remobe Control: Stop/Up/Down/Prog = 1/2/4/8
-  - ```StopAfterMs``` (optional) Can be used to move a blind for a defined number of milliseconds. Increment the RollingCode by two after using this.
+## Command parameters
+- Example: ```RFtxSMFY {"Id":123,"RollingCode":6,"Button":2,"StopAfterMs":2500}```
+- ```Id``` The Id of this virtual controller; you will pair the blind with this Id. It should be different to the Id of any other controllers you have. Use as many Ids as you need.
+- ```RollingCode``` For each Id that you use, increment the rolling code each time you send a command. This is part of the Somfy RTS protocol.
+- ```Button``` The buttons on the Somfy Remote Control: Stop/Up/Down/Prog = 1/2/4/8
+- ```StopAfterMs``` (optional) Can be used to move a blind for a defined number of milliseconds. Increment the RollingCode by two after using this.
   
 
