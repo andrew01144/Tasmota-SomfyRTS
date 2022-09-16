@@ -45,7 +45,7 @@ This is standard Tasmota procedure. There are 3 ways to execute a command.
 ## Command parameters
 There are two ways of using ```RFtxSMFY```: Stateful or Stateless.
 - Stateful: Supports 8 virtual controllers. ```RollingCode``` is maintained on the ESP32 and uses its persistent memory. Examples:
-  - ```RFtxSMFY {"Idx":1,"Id":123,"RollingCode",1}``` Set virtual controller #1 to have Id 123 and start its rolling code at 1.
+  - ```RFtxSMFY {"Idx":1,"Id":123,"RollingCode",1}``` Initialize virtual controller #1 with Id 123 and start its rolling code at 1.
   - ```RFtxSMFY {"Idx":1,"Button",2}``` Transmit 'Up' from virtual controller #1.
   - ```RFtxSMFY {"Idx":1,"Button",4,"StopAfterMs":2500}``` Transmit 'Down' from virtual controller #1, then transmit 'Stop' after 2.5 seconds.
   - ```Idx``` (1-8) The virtual controller number/index.
