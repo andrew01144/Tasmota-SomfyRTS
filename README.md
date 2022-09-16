@@ -35,7 +35,13 @@ A Berry script to to control Somfy powered blinds using Tasmota.
 - Try controlling the blind:
   - Roll up: ```RFtxSMFY {"Idx":1,"Button":2}```
   - Roll down: ```RFtxSMFY {"Idx":1,"Button":4}```
-    
+
+## Executing Tasmota commands
+This is standard Tasmota procedure. There are 3 ways to execute a command.
+- From the Tasmota WebUI: Consoles > Console: Paste in the command ```RFtxSMFY {"Idx":1,"Button":2}```
+- From Linux, using mqtt: ```mosquitto_pub -t cmnd/my-smfy-esp/RFtxSMFY -m '{"Idx":1,"Button":2}'```
+- From Linux, using http: ```curl -s --data-urlencode 'cmnd=RFtxSMFY {"Idx":1,"Button":2}' http://192.168.1.123/cm```
+
 ## Command parameters
 There are two ways of using ```RFtxSMFY```: Stateful or Stateless.
 - Stateful: Supports 8 virtual controllers. ```RollingCode``` is maintained on the ESP32 and uses its persistent memory. Examples:
