@@ -15,7 +15,7 @@ A Berry script to to control Somfy powered blinds using Tasmota.
 ## To demonstrate operation
 - Set up the Tasmota device:
   - Take an ESP32 module and install tasmota32-ir.bin V12.0.2 or later.
-  - Upload these scripts ```bRFsendCustom_V3.be``` and ```autoexec.be``` to Tasmota's file system. (Not posted yet. Ping me if you need them.)
+  - Upload these scripts ```RFtxSMFY.be``` and ```autoexec.be``` to Tasmota's file system.
     - From the Tasmota WebUI: Consoles > Manage File system > Choose File.
     - This adds the ```RFtxSMFY``` command to Tasmota.
   - Configure a GPIO pin for IRsend.
