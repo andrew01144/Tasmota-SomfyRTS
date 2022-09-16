@@ -16,13 +16,13 @@
     Optional: Add this simple RC filter to the IRsend pin to remove unwanted 8us spaces.
 	(Optional, because the FS1000A ignores the 8us spaces, but filtering them out makes the signal look better on a logic analyzer)
 	
-	 ESP32                             FS1000A
-	    5V ------------------------>-- Vcc
-	IRsend ->---/\/\/\/\----------->-- Data
-	              1k2        |
-				      47nF  ===
-					         |
-	   GND --------------------------- GND
+     ESP32                             FS1000A
+        5V ------------------------>-- Vcc
+    IRsend ->---/\/\/\/\----------->-- Data
+                  1k2        |
+                      47nF  ===
+                             |
+      GND --------------------------- GND
 	
 	
  About the Somfy RTS protocol:
