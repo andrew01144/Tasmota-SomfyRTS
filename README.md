@@ -7,7 +7,7 @@ A Berry script to to control Somfy powered blinds using Tasmota.
   - An ESP32 module running tasmota32-ir.bin V12.0.2 or later.
   - A 433MHz transmitter module such as the FS1000A. Ideally, the FS1000A should be modified to transmit at 433.42MHz.
 - Tasmota compatibility:
-  - It uses Tasmota's IRsend command to send the 433MHz radio signal. It is *not* a fork of Tasmota; it uses an unmodified Tasmota binary, so should be compatible with future versions of Tasmota.
+  - It uses Tasmota's IRsend command to generate the Somfy RTS protocol bit stream. It is *not* a fork of Tasmota, so no recompilation is required. It uses an unmodified Tasmota binary, so should be compatible with future versions of Tasmota.
   - It requires an ESP32 in order to provide the Berry scripting language.
   - It requires the -ir version of the tasmota32 binary in order to support IRsend's Raw format.
   - I don't know if it can be integrated into Tasmota's blinds and shutters functionality. Maybe [this](https://github.com/GitHobi/Tasmota/wiki/Somfy-RTS-support-with-Tasmota#using-rules-to-control-blinds) might do it.
