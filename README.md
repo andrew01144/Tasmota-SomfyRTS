@@ -9,7 +9,7 @@ A Berry script to to control Somfy powered blinds using Tasmota.
 - Tasmota compatibility:
   - It requires an ESP32 in order to provide the Berry scripting language.
   - It requires the -ir version of the tasmota binary in order to provide IRsend's Raw format.
-  - I don't know if it can be integrated into Tasmota's blinds and shutters functionality.
+  - I don't know if it can be integrated into Tasmota's blinds and shutters functionality. Maybe [this](https://github.com/GitHobi/Tasmota/wiki/Somfy-RTS-support-with-Tasmota#using-rules-to-control-blinds) might do it.
 
   
 ## To demonstrate operation
