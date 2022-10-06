@@ -26,7 +26,7 @@ A Berry script to to control Somfy powered blinds using Tasmota.
     - If this is an unmodified 433.92 MHz FS1000A, then ensure the FS1000A is within 1 meter of the Somfy blind.
 - Pair the ESP32/Tasmota with the blind:
   - Assign an Id to virtual controller #1 in the ESP32
-    - Execute this Tasmota command: ```RFtxSMFY {"Idx":1,"Id":123,"RollingCode",1}```
+    - Execute this Tasmota command: ```RFtxSMFY {"Idx":1,"Id":123,"RollingCode":1}```
     - *To execute a Tasmota command, paste it into the WebGUI Console, or send it via http or mqtt.*
   - Take your existing Somfy remote control, and press and hold the PROG button for 2 seconds. The blind should jog up and down.
     - *The PROG button is on the back of the controller and requires a paperclip to press it.*
