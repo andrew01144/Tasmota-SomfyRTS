@@ -27,6 +27,17 @@ var tasmotaShutterIntegration = 1   # Create rules to make Tasmota Shutters gene
         CS_PIN   = 12   # D8 on Wemos D1 mini
         # In the Tasmota UI, Configure GPIO35 = IRsend (D1 on Wemos D1 mini)
     end
+    
+    if false
+        # Get SPI pins from Tasmota Configuration
+        SCK_PIN  = gpio.pin(gpio.SPI_CLK)
+        MISO_PIN = gpio.pin(gpio.SPI_MISO)
+        MOSI_PIN = gpio.pin(gpio.SPI_MOSI)
+        CS_PIN   = gpio.pin(gpio.SPI_CS)
+        # if any of these are -1, then we need to throw an error.
+    end
+
+
 
 # ---------------------------------------------------------------------------
 
@@ -147,17 +158,8 @@ var tasmotaShutterIntegration = 1   # Create rules to make Tasmota Shutters gene
 
 
     Thoughts, to do etc
-
-        Should I get GPIO numbers from Tasmota's configuration? It's a more Tasmota way of doing things, but also a bit of a pain.
-            print(gpio.pin(gpio.SPI_CLK))
-            print(gpio.pin(gpio.SPI_MISO))
-            print(gpio.pin(gpio.SPI_MOSI))
-            print(gpio.pin(gpio.SPI_CS))
-            (returns -1 if not configured)
-
-        Can I write the CC1101 support as a class, to hide all the private functions?
-
-        Read something from the CC1101, and report an error if it is not present.
+        - Can I write the CC1101 support as a class, to hide all the private functions?
+        - Read something from the CC1101, and report an error if it is not present.
 -#
 
 import gpio
@@ -212,6 +214,7 @@ def RegConfigSettings(freq)
     SpiWriteReg(0x03,0x47)   # FIFOTHR
     SpiWriteReg(0x08,0x32)   # PKTCTRL0     from Elechouse ccMode(1), SmartRF says 0x05
     SpiWriteReg(0x0B,0x06)   # FSCTRL1
+    
     SpiWriteBytes([0x7E, 0x00,0xC0,0x00,0x00,0x00,0x00,0x00,0x00], 9)   # PATABLE, as per Elechouse.
 
     if freq == 42
@@ -553,12 +556,6 @@ def somfy_cmd(cmd, ix, payload, payload_json)
   frameGap = 27
 
 
-  import persist
-  if !persist.has('sState')
-    persist.sState = [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]
-  end
-
-
   # parse payload
   if payload_json != nil && payload_json.find("Idx") != nil    # does the payload contain an 'Idx' field?
     idx = int(payload_json.find("Idx"))
@@ -596,8 +593,13 @@ def somfy_cmd(cmd, ix, payload, payload_json)
   end
 
 
+  import persist
   if idx > 0
     # Stateful mode: id will be remembered, and rCode will be maintained in _persist.json
+    if !persist.has('sState')
+      # Persistent storage of [id, rCode] for virtual controllers 1 thru 8.
+      persist.sState = [[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]]  # sState[0] not used.
+    end
     if id == 0
       # id is not supplied, so retrieve it from persistent storage
       id = persist.sState[idx][0]
@@ -702,7 +704,7 @@ if tasmotaShutterIntegration
         
     end
     
-    var position = [0, 0, 0, 0]
+    var position = [0, 0, 0, 0, 0]      # position[0] not used.
     def shutterChange(idx, op, value)
         # print("shutterChange", idx, op, value)
         if op == 'position'
