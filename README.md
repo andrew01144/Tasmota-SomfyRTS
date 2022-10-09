@@ -175,15 +175,19 @@ This requires that the shutter has been reasonably calibrated, eg: ```ShutterOpe
 # The IRsend signal
 
 This script uses IRsend to generate the Somfy protocol bitstream.
-- I use IRsend, as it is the only way I know of to Tasmota to generate an accurately timed bitstream. Using Berry's gpio.digital_write() and tasmota.delay() does not have the required precision.
+- I use IRsend, as it is the only way I know to get Tasmota to generate an accurately timed bitstream. Using Berry's gpio.digital_write() and tasmota.delay() does not have the required precision.
 - By default, the IRsend signal is modulated at 38kHz. Interestingly, you can feed that directly to an FS1000A and it ignores the modulation. However, I decided not to do that.
-- I set the modulation frequency to as low as it allows, which is 1kHz, so any "Mark" less than 500us will not show any modulation. If IRsend had a 'no modulation' option, that would be perfect.
-- To get longer Marks, I send multiple adjacent Marks. Sadly, the Marks have a tiny Spaces between them, and these appear as glitches on the IRsend signal.
+- I set the modulation frequency to as low as it allows, which is 1kHz. If IRsend had a 'no modulation' option, that would be perfect.
+- At 1kHz, any "Mark" less than 500us will not show any modulation. To get longer Marks, I send multiple adjacent Marks.
+- Sadly, the Marks have a tiny Space between them, and these appear as glitches on the IRsend signal.
+- The FS1000A filters out the glitches.
+- The CC1101 transmits some of them, but, as far as I can tell, the Somfy filters them out.
+- So, it seems these glitches do not present a problem. If you want a completely clean signal, you can add a simple RC filter to the IRsend pin.
 
 ![image](https://user-images.githubusercontent.com/18399286/194718690-cd2effd2-5192-44c0-89d2-3886c64b0a8f.png)
 
-The top trace is the IRsend out from the ESP. The lower trace is the signal as received by an RXB14. The FS1000A filters out the glitches, but the CC1101 transmits some of them. As far as I can tell, when these are transmitted by a CC1101, the Somfy filters them out. So, all is ok.
+The top trace is the IRsend out from the ESP. The lower trace is the signal transmitted by a CC1101 and received by an RXB14.
 
-If you want a completely clean signal, you can add a simple RC filter to the IRsend pin.
+
 
 ---
