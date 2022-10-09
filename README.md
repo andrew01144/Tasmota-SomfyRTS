@@ -172,10 +172,10 @@ This requires that the shutter has been reasonably calibrated, eg: ```ShutterOpe
 # The IRsend signal
 
 This script uses IRsend to generate the Somfy protocol bitstream.
-- I use IRsend, as it is the only way I know of getting Tasmota to generate an accurately timed bitstream. Using Berry's gpio.digital_write() and tasmota.delay() does not have the required precision.
-- By default, the IRsend signal is modulated at 38kHz. Interestingly, you can feed that directly to an FS1000A, and it ignores the modulation. However, I decided not to do that.
+- I use IRsend, as it is the only way I know of to Tasmota to generate an accurately timed bitstream. Using Berry's gpio.digital_write() and tasmota.delay() does not have the required precision.
+- By default, the IRsend signal is modulated at 38kHz. Interestingly, you can feed that directly to an FS1000A and it ignores the modulation. However, I decided not to do that.
 - I set the modulation frequency to as low as it allows, which is 1kHz, so any "Mark" less than 500us will not show any modulation. If IRsend had a 'no modulation' option, that would be perfect.
-- To get longer Marks, I send multiple adjacent Marks. Sadly, they have a tiny space between them, and these glitches can be seen on the IRsend signal.
+- To get longer Marks, I send multiple adjacent Marks. Sadly, the Marks have a tiny Spaces between them, and these appear as glitches on the IRsend signal.
 
 ![image](https://user-images.githubusercontent.com/18399286/194718690-cd2effd2-5192-44c0-89d2-3886c64b0a8f.png)
 
