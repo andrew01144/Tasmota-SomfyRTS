@@ -183,12 +183,12 @@ This script uses IRsend to generate the Somfy protocol bitstream.
 - At 1kHz, any "Mark" less than 500us will not show any modulation. To get longer Marks, I send multiple adjacent equal-sized Marks.
 - Sadly, the Marks have a tiny Space between them, and these appear as glitches on the IRsend signal.
 - The FS1000A filters out the glitches.
-- The CC1101 transmits some of them, but, as far as I can tell, the Somfy filters them out.
+- The CC1101 transmits some of the glitches, but, as far as I can tell, the Somfy filters them out.
 - So, it seems these glitches do not present a problem. If you want a completely clean signal, you can add a simple RC filter to the IRsend pin. A 1k2 resistor from the IRsend pin to the Tx module Data/GDO0 pin, and a 47nF capacitor from the Data/GDO0 pin to GND.
 
 ![image](https://user-images.githubusercontent.com/18399286/194718690-cd2effd2-5192-44c0-89d2-3886c64b0a8f.png)
 
-The top trace is the IRsend pin of the ESP. The lower trace is the signal received by an RXB14 from a CC1101.
+The top trace is the IRsend pin of the ESP which drives the GDO0 pin of the CC1101. The lower trace is the signal received by an RXB14.
 
 ---
 
