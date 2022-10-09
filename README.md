@@ -12,7 +12,7 @@ A Berry script to to control Somfy powered blinds using Tasmota.
   - It is implemented as a Tasmota Berry script. It is *not* a fork of Tasmota, so should be compatible with future versions of Tasmota.
   - It requires an ESP32 in order to provide the Berry scripting language.
   - It requires the -ir version of the tasmota32 binary in order to support IRsend's Raw format, because it uses Tasmota's IRsend command to generate the Somfy RTS protocol bit stream. 
-  - It can probably be integrated into Tasmota's  [Shutters and Blinds](https://tasmota.github.io/docs/Blinds-and-Shutters/) functionality by following [these instructions](#integration-with-tasmota-shutters-and-blinds), but this will require a custom build of Tasmota to include both IR and Shutters.
+  - It can be integrated into Tasmota's [Shutters and Blinds](https://tasmota.github.io/docs/Blinds-and-Shutters/) functionality by following [these instructions](#integration-with-tasmota-shutters-and-blinds), but this will require a custom build of Tasmota to include both IR and Shutters.
 
   
 ## To demonstrate operation
@@ -23,8 +23,7 @@ A Berry script to to control Somfy powered blinds using Tasmota.
     - This adds the ```RFtxSMFY``` command to Tasmota.
   - Configure a GPIO pin for IRsend.
     - From the Tasmota WebUI: Configuration > Configure Module.
-  - Connect the ```Data``` pin of an FS1000A 433MHz transmitter module to the IRsend pin of the ESP32.
-    - Also connect ```GND``` and ```Vcc``` of the FS1000A to the ```GND``` and ```5V``` pins of the ESP32.
+  - Connect the 3 pins of the FS1000A to the ESP32 as shown [here](#using-an-fs1000a).
     - If this is an unmodified 433.92 MHz FS1000A, then ensure the FS1000A is within 1 meter of the Somfy blind.
     - If using a CC1101, follow [these instructions](#using-a-cc1101).
 - Pair the ESP32/Tasmota with the blind:
@@ -57,12 +56,15 @@ There are two ways of using ```RFtxSMFY```: Stateful or Stateless.
 - **Stateless**: Supports any number of virtual controllers. The RollingCode must be maintained on the host that sends the commands to Tasmota. Increment the RollingCode once after each command, and twice for StopAfterMs. Stateless commands do not use the ```Idx``` parameter. Examples:
   - ```RFtxSMFY {"Id":123,"RollingCode":6,"Button":2}```
   - ```RFtxSMFY {"Id":123,"RollingCode":7,"Button":4,"StopAfterMs":2500}```
-- Parameters
+- **Parameters**
   - ```Idx``` (1-8) The virtual controller number/index.
   - ```Id``` (1-16777215) The Id of this virtual controller; you will pair the blind with this Id. It should be different from the Id of any other controllers you have. Use as many Ids as you need. In Stateful mode, this is stored in persistent memory.
   - ```RollingCode``` (0-65535) The Somfy RTS protocol sends a 'rolling code' that increments by 1 each time a command is transmitted. If there is a significant gap between the rolling code you transmit and the rolling code it last recieved, it will ignore the command. Normally, start at 1. In Stateful mode, this is stored in persistent memory.
   - ```Button``` The buttons on the Somfy Remote Control: Stop/Up/Down/Prog = 1/2/4/8
   - ```StopAfterMs``` Can be used to move a blind for a defined number of milliseconds.
+  - ```Gap``` Gap between frames in milliseconds. Default 27.
+  - ```nFrames``` Number of frames to send. Default 3.
+    - ```{"Button":8,"nFrames":12,"Gap":72}``` Generates a long press (2 sec) PROG, though this is unlikely to be useful in real life.
   - ```UseSomfyFreq``` (1|0) For use with CC1101, 1: Transmit at 433.42MHz (default), 0: Transmit at 433.92MHz. Can be useful for troubleshooting.
 
 
@@ -74,10 +76,10 @@ There are two ways of using ```RFtxSMFY```: Stateful or Stateless.
 
 ## Background
 
-Somfy RTS transmits at 433.42MHz, compared to the more usual 433.92MHz. You can use a module that transmits at 433.92MHz, but the range will be limited to a few meters. For a proper solution, you will need a 433.42MHz transmitter. You could use the popular FS1000A and change the Crystal/SAW to 433.42MHz, or the CC1101 which has a software programmable frequency.
+Somfy RTS transmits at 433.42MHz, compared to the more usual 433.92MHz. You can use a module that transmits at 433.92MHz, but the range will be limited to a few meters. For a proper solution, you will need a 433.42MHz transmitter. You could use the popular FS1000A and change the Crystal/SAW to 433.42MHz, or use the CC1101 which has a software programmable frequency. Some people prefer the CC1101 as it avoids performing surgery on the FS1000A.
 
 ## Using an FS1000A
-Easy, 3-wire connection. Change the Crystal/SAW to 433.42MHz.
+In my opinion, the FS1000A transmitter module is the easiest solution, with just 3 wires to the ESP32. You can use an unmodified (433.92MHz) module for testing, as long as you are within about 2m of the Somfy. To obtain full range, change the Crystal/SAW to 433.42MHz. Search eBay for "433 Crystal SAW". With only 3 legs, the component is reasonably easy to de-solder without any special tools. The FS1000A is also very tolerant of the [glitches in the IRsend signal](#the-irsend-signal).
 
 | FS1000A | ESP32    |
 |---------|----------|
@@ -94,13 +96,13 @@ var hasCC1101 = 1                   # Set to 0 for other Tx modules such as FS10
 
 The CC1101 is configured via an SPI interface which needs to be wired to the ESP32. Choose the GPIO pins you want to use for this. I do not use the ESP32's SPI interface; I simply bit-bang GPIO pins to implement the SPI protocol, so you can choose pretty much any pins that are convenient. Using the Tasmota WebUI, choose Configuration > Configure Module, and define the SPI and IRsend pins.
 
-_The Relay GPIOs are optional, and are defined for integration with the Tasmota Shutter and Blinds functionality. They are not wired to anything._
+_The Relay GPIOs in the screenshot below are optional, and are defined for integration with the Tasmota Shutter and Blinds functionality. They are not wired to anything._
 
 For example:
 
 ![image](https://user-images.githubusercontent.com/18399286/194719453-22dfa4a0-f396-4aeb-9ece-312576d346e7.png)
 
-Then wire these pins to the CC1101 module:
+Then wire these 7 pins to the CC1101 module:
 
 | CC1101 | ESP32    |
 |--------|----------|
@@ -113,7 +115,7 @@ Then wire these pins to the CC1101 module:
 | GDO2   | not used |
 | GND    | GND      |
 
-## Selecting a different frequency
+### Selecting a different frequency
 By default, the CC1101 will be configured to the Somfy frequency 433.42MHz. For troubleshooting, it can be useful to use the more standard 433.92MHz to work with other receivers. This can be set using the command ```RFtxSMFY {"UseSomfyFreq":0}```. To switch back to 433.42MHz use ```RFtxSMFY {"UseSomfyFreq":1}```,  or simply reboot the ESP32.
 
 ---
@@ -187,6 +189,13 @@ This script uses IRsend to generate the Somfy protocol bitstream.
 
 The top trace is the IRsend pin of the ESP. The lower trace is the signal received by an RXB14 from a CC1101.
 
+---
+
+# My usage
+
+I have been using this solution since July 2022 with 100% reliability. I use the Stateless mode, with my host computer maintaining the rolling code, current position, and calculating the move-time to travel to the requested position. I use an FS1000A modified to 433.42MHz, with an RC filter on the IRsend pin. Prior to this, I used an ESP8266 running my own code since May 2018, but have recently been on a mission to eliminate my own firmware from devices in my house.
+
+The other capabilities (Stateless mode, Integration with Tasmota Shutters and Blinds, CC1101, and using unfiltered IRsend) have all been tested, but not with months of usage.
 
 
 ---
