@@ -10,7 +10,7 @@ A Berry script to to control Somfy powered blinds using Tasmota.
   - It is implemented as a Tasmota Berry script. It is *not* a fork of Tasmota, so should be compatible with future versions of Tasmota.
   - It requires an ESP32 in order to provide the Berry scripting language.
   - It requires the -ir version of the tasmota32 binary in order to support IRsend's Raw format, because it uses Tasmota's IRsend command to generate the Somfy RTS protocol bit stream. 
-  - It can probably be integrated into Tasmota's  [Shutters and Blinds](https://tasmota.github.io/docs/Blinds-and-Shutters/) functionality by following [these instructions](../../wiki/Integration-with-Tasmota-Shutters), but this will require a custom build of Tasmota to include both IR and Shutters.
+  - It can probably be integrated into Tasmota's  [Shutters and Blinds](https://tasmota.github.io/docs/Blinds-and-Shutters/) functionality by following [these instructions](#integration-with-tasmota-shutters-and-blinds), but this will require a custom build of Tasmota to include both IR and Shutters.
 
   
 ## To demonstrate operation
@@ -46,9 +46,10 @@ This is standard Tasmota procedure. There are 3 ways to execute a command.
 ## The RFtxSMFY command
 There are two ways of using ```RFtxSMFY```: Stateful or Stateless.
 - **Stateful**: Supports 8 virtual controllers. ```RollingCode``` is maintained on the ESP32 and uses its persistent memory. Stateless commands require the ```Idx``` parameter. Examples:
-  - ```RFtxSMFY {"Idx":1,"Id":123,"RollingCode":1}``` Initialize virtual controller #1 with Id 123 and start its rolling code at 1.
+  - ```RFtxSMFY {"Idx":1,"Id":123,"RollingCode":1}``` Initialize virtual controller #1 with Id 123 and start its rolling code at 1. Always set both parameters in this command.
   - ```RFtxSMFY {"Idx":1,"Button":2}``` Transmit 'Up' from virtual controller #1.
   - ```RFtxSMFY {"Idx":1,"Button":4,"StopAfterMs":2500}``` Transmit 'Down' from virtual controller #1, then transmit 'Stop' after 2.5 seconds.
+  - You may need to know the current values of ```Id``` and ```RollingCode```, for example, to transfer an existing virtual controller to a different ESP32. These values can be seen by viewing the ```_persist.json``` file in the Tasmota Manage File system Console.
   - *I don't use Stateful mode, so it is less well tested than Stateless mode.*
 - **Stateless**: Supports any number of virtual controllers. The RollingCode must be maintained on the host that sends the commands to Tasmota. Increment the RollingCode once after each command, and twice for StopAfterMs. Stateless commands do not use the ```Idx``` parameter. Examples:
   - ```RFtxSMFY {"Id":123,"RollingCode":6,"Button":2}```
@@ -65,11 +66,14 @@ There are two ways of using ```RFtxSMFY```: Stateful or Stateless.
 ---
 
 
-# Support for CC1101
+# 433MHz Transmitter Modules
 
 ## Background
 
 Somfy RTS transmits at 433.42MHz, compared to the more usual 433.92MHz. You can use a module that transmits at 433.92MHz, but the range will be limited to a few meters. For a proper solution, you will need a 433.42MHz transmitter. You could use the popular FS1000A and change the Crystal/SAW to 433.42MHz, or the CC1101 which has a software programmable frequency.
+
+## Using an FS1000A
+Easy, 3-wire connection. Change the SAW/Crystal to 433.42MHz.
 
 ## Using a CC1101
 
@@ -110,7 +114,7 @@ Edit RFtxSMFY.be to enable tasmotaShutterIntegration.
 ```
 var tasmotaShutterIntegration = 1   # Create rules to make Tasmota Shutters generate Somfy commands.
 ```
-tasmota32-ir.bin does not include support for Shutters, so build a custom Tasmota binary that includes both IR and Shutters.
+tasmota32-ir.bin does not include support for Shutters, so you will need to build a custom Tasmota binary that includes both IR and Shutters.
 > Go to the excellent [TasmoCompiler](https://gitpod.io/#https://github.com/benzino77/tasmocompiler)<br>
 Select features: ```ESP32: Generic```, Add: ```IR Support``` _(Shutters is included by default)_.<br>
 Custom parameters: ```#define CODE_IMAGE_STR "custom-ir"```<br>
