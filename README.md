@@ -186,7 +186,7 @@ This script uses IRsend to generate the Somfy protocol bitstream.
 
 ![image](https://user-images.githubusercontent.com/18399286/194718690-cd2effd2-5192-44c0-89d2-3886c64b0a8f.png)
 
-The top trace is the IRsend out from the ESP. The lower trace is the signal transmitted by a CC1101 and received by an RXB14.
+The top trace is the IRsend pin of the ESP. The lower trace is the signal received by an RXB14 from a CC1101.
 
 
 
