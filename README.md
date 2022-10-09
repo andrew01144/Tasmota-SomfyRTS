@@ -5,7 +5,9 @@ A Berry script to to control Somfy powered blinds using Tasmota.
 - It emulates any number of Somfy RTS Remote Control units to control any number of Somfy-powered shades/blinds that use the 433MHz Somfy RTS protocol.
 - It requires:
   - An ESP32 module running tasmota32-ir.bin V12.0.2 or later.
-  - A 433MHz transmitter module such as the FS1000A. Ideally, the FS1000A should be modified to transmit at 433.42MHz.
+  - A 433MHz transmitter module.
+    - Simplest is the FS1000A. However, it should be modified to transmit at 433.42MHz.
+    - Or the CC1101, which has a programmable transmit frequency.
 - Tasmota compatibility:
   - It is implemented as a Tasmota Berry script. It is *not* a fork of Tasmota, so should be compatible with future versions of Tasmota.
   - It requires an ESP32 in order to provide the Berry scripting language.
@@ -24,6 +26,7 @@ A Berry script to to control Somfy powered blinds using Tasmota.
   - Connect the ```Data``` pin of an FS1000A 433MHz transmitter module to the IRsend pin of the ESP32.
     - Also connect ```GND``` and ```Vcc``` of the FS1000A to the ```GND``` and ```5V``` pins of the ESP32.
     - If this is an unmodified 433.92 MHz FS1000A, then ensure the FS1000A is within 1 meter of the Somfy blind.
+    - If using a CC1101, follow [these instructions](#using-a-cc1101).
 - Pair the ESP32/Tasmota with the blind:
   - Assign an Id to virtual controller #1 in the ESP32
     - Execute this Tasmota command: ```RFtxSMFY {"Idx":1,"Id":123,"RollingCode":1}```
