@@ -158,11 +158,9 @@ Finally, we need to tell Tasmota how many seconds it takes to open and close the
 Now, try some of these commands: ```ShutterOpen1``` ```ShutterPosition1 50``` ```ShutterClose1```.
 
 ### How the rules work
-Tasmota controls the blinds by switching the assigned relays on and off. RFtxSMFY.be sets up rules so that when Tasmota switches an assigned realy, an RFtxSMFY command is generates to move the blind. You don't need to enter these rules, they are included in the RFtxSMFY.be script.
+Tasmota controls the blinds by switching the assigned relays on and off. RFtxSMFY.be sets up rules so that when Tasmota switches an assigned realy, an RFtxSMFY command is generated to move the blind. You don't need to enter these rules, they are included in the RFtxSMFY.be script.
 
-The main problem is that Tasmota tries to control the movement of the blinds on its own. So if you lift /lower the blind the whole way up / down, Tasmota will wait for a certain amount of time and then send a "stop" command. If at this point in time the blind has already stopped, this "stop" will actually cause a "go-my" function, not a "stop". So the rules in RFtxSMFY.be try to distinguish between a complete movement, where no "stop" is needed and movements where a "stop" needs to be executed.
-
-Tasmota Shutter1 (in ShutterMode 1) uses relay1 for up and relay2 for down.<br>
+The logic:<br>
 When relay1 turns on, we need to send a Somfy up command.<br>
 When relay2 turns on, we need to send a Somfy down command.<br>
 When relay1 or relay2 turn off, we might need to send a Somfy stop command, but only if we think the shutter is currently moving.<br>
