@@ -140,11 +140,12 @@ Download firmware.bin
 
 ### Tasmota Configuration
 
-For each of the Blinds/Shutters, you need to configure two relays to unused GPIOs. In the Tasmota WebUI, go to Configuration > Configure Module, and set something like this:
+For each of the Blinds/Shutters, you need to configure two relays to unused GPIOs.
+In this example, I have two blinds, so I will need to assign 4 GPIOs.
+In the Tasmota WebUI, go to Configuration > Configure Module, and set something like this:
 
 ![image](https://user-images.githubusercontent.com/18399286/194704956-8ba6e670-f78d-4bf7-aa54-30386042d936.png)
 
-In this example, I have two blinds, and I have decided assign relay1 to relay4 to spare GPIOs; I am using GPIO12,13,14,15.
 
 Then we need to enable Shutter support: ```SetOption80 1```.
 
