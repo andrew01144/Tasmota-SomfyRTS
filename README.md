@@ -122,10 +122,14 @@ By default, the CC1101 will be configured to the Somfy frequency 433.42MHz. For 
 
 You may want to use [Tasmota's support for Shutters and Blinds](https://tasmota.github.io/docs/Blinds-and-Shutters) to allow you to use commands like ```ShutterPosition1 30``` to set the blind to 30%. Tasmota can keep track of the position of the blind, and if it knows how long it takes to open and close it, it can send move-delay-stop commands to move the blind to a specific position. These instructions draw heavily from [GitHobi](https://github.com/GitHobi/Tasmota/wiki/Somfy-RTS-support-with-Tasmota#configuring-tasmota).
 
+### Enable the rules
+
 Edit RFtxSMFY.be to enable tasmotaShutterIntegration.
 ```
 var tasmotaShutterIntegration = 1   # Create rules to make Tasmota Shutters generate Somfy commands.
 ```
+### Build a Tamota binary with IR and Shutter support
+
 tasmota32-ir.bin does not include support for Shutters, so you will need to build a custom Tasmota binary that includes both IR and Shutters.
 > Go to the excellent [TasmoCompiler](https://gitpod.io/#https://github.com/benzino77/tasmocompiler)<br>
 Select features: ```ESP32: Generic```, Add: ```IR Support``` _(Shutters is included by default)_.<br>
@@ -150,7 +154,7 @@ Finally, we need to tell Tasmota how many seconds it takes to open and close the
 
 Now, try some of these commands: ```ShutterOpen1``` ```ShutterPosition1 50``` ```ShutterClose1```.
 
-### Using rules to control blinds
+### How the rules work
 Tasmota controls the blinds by switching the assigned relays on and off. RFtxSMFY.be sets up rules so that when Tasmota switches an assigned realy, an RFtxSMFY command is generates to move the blind. You don't need to enter these rules, they are included in the RFtxSMFY.be script.
 
 The main problem is that Tasmota tries to control the movement of the blinds on its own. So if you lift /lower the blind the whole way up / down, Tasmota will wait for a certain amount of time and then send a "stop" command. If at this point in time the blind has already stopped, this "stop" will actually cause a "go-my" function, not a "stop". So the rules in RFtxSMFY.be try to distinguish between a complete movement, where no "stop" is needed and movements where a "stop" needs to be executed.
