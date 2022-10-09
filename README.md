@@ -64,7 +64,7 @@ There are two ways of using ```RFtxSMFY```: Stateful or Stateless.
   - ```StopAfterMs``` Can be used to move a blind for a defined number of milliseconds.
   - ```Gap``` Gap between frames in milliseconds. Default 27.
   - ```nFrames``` Number of frames to send. Default 3.
-    - ```{"Button":8,"nFrames":12,"Gap":72}``` Generates a long press (2 sec) PROG, though this is unlikely to be useful in real life.
+    - ```{"Idx":1,"Button":8,"nFrames":12,"Gap":72}``` Generates a long press (2 sec) PROG, may be useful for unlearning an Id.
   - ```UseSomfyFreq``` (1|0) For use with CC1101, 1: Transmit at 433.42MHz (default), 0: Transmit at 433.92MHz. Can be useful for troubleshooting.
 
 
