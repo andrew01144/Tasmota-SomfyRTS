@@ -128,7 +128,7 @@ Edit RFtxSMFY.be to enable tasmotaShutterIntegration.
 ```
 var tasmotaShutterIntegration = 1   # Create rules to make Tasmota Shutters generate Somfy commands.
 ```
-### Build a Tamota binary with IR and Shutter support
+### Build a Tasmota binary with IR and Shutter support
 
 tasmota32-ir.bin does not include support for Shutters, so you will need to build a custom Tasmota binary that includes both IR and Shutters.
 > Go to the excellent [TasmoCompiler](https://gitpod.io/#https://github.com/benzino77/tasmocompiler)<br>
