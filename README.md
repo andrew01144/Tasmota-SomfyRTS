@@ -60,6 +60,7 @@ There are two ways of using ```RFtxSMFY```: Stateful or Stateless.
   - ```RollingCode``` (0-65535) The Somfy RTS protocol sends a 'rolling code' that increments by 1 each time a command is transmitted. If there is a significant gap between the rolling code you transmit and the rolling code it last recieved, it will ignore the command. Normally, start at 1. In Stateful mode, this is stored in persistent memory.
   - ```Button``` The buttons on the Somfy Remote Control: Stop/Up/Down/Prog = 1/2/4/8
   - ```StopAfterMs``` Can be used to move a blind for a defined number of milliseconds.
+  - ```UseSomfyFreq``` (1|0) For use with CC1101, 1: Transmit at 433.42MHz (default), 0: Transmit at 433.92MHz. Can be useful for troubleshooting.
 
 
 ---
@@ -73,7 +74,13 @@ There are two ways of using ```RFtxSMFY```: Stateful or Stateless.
 Somfy RTS transmits at 433.42MHz, compared to the more usual 433.92MHz. You can use a module that transmits at 433.92MHz, but the range will be limited to a few meters. For a proper solution, you will need a 433.42MHz transmitter. You could use the popular FS1000A and change the Crystal/SAW to 433.42MHz, or the CC1101 which has a software programmable frequency.
 
 ## Using an FS1000A
-Easy, 3-wire connection. Change the SAW/Crystal to 433.42MHz.
+Easy, 3-wire connection. Change the Crystal/SAW to 433.42MHz.
+
+| FS1000A | ESP32    |
+|---------|----------|
+| 5V      | 5V       |
+| Data    | IRsend   |
+| GND     | GND      |
 
 ## Using a CC1101
 
