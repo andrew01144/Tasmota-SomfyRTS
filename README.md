@@ -120,6 +120,8 @@ By default, the CC1101 will be configured to the Somfy frequency 433.42MHz. For 
 
 # Integration with Tasmota Shutters and Blinds
 
+You may want to use [Tasmota's support for Shutters and Blinds](https://tasmota.github.io/docs/Blinds-and-Shutters) to allow you to use commands like ```ShutterPosition1 30``` to set the blind to 30%. Tasmota can keep track of the position of the blind, and if it knows how long it takes to open and close it, it can send move-delay-stop commands to move the blind to a specific position. These instructions draw heavily from [GitHobi](https://github.com/GitHobi/Tasmota/wiki/Somfy-RTS-support-with-Tasmota#configuring-tasmota).
+
 Edit RFtxSMFY.be to enable tasmotaShutterIntegration.
 ```
 var tasmotaShutterIntegration = 1   # Create rules to make Tasmota Shutters generate Somfy commands.
@@ -130,44 +132,37 @@ Select features: ```ESP32: Generic```, Add: ```IR Support``` _(Shutters is inclu
 Custom parameters: ```#define CODE_IMAGE_STR "custom-ir"```<br>
 Download firmware.bin
 
+### Tasmota Configuration
+
 For each of the Blinds/Shutters, you need to configure two relays to unused GPIOs. In the Tasmota WebUI, go to Configuration > Configure Module, and set something like this:
 
 ![image](https://user-images.githubusercontent.com/18399286/194704956-8ba6e670-f78d-4bf7-aa54-30386042d936.png)
 
-Then run these commands:
-```
-SetOption80 1       # Enable Shutter mode.
+In this example, I have two blinds, and I have decided assign relay1 to relay4 to spare GPIOs; I am using GPIO12,13,14,15.
 
-ShutterRelay1 1     # Shutter1 will use relay1 and relay2.
-ShutterMode1 1      # Mode 1: relay1 = up, relay2 = down.
+Then we need to enable Shutter support: ```SetOption80 1```.
 
-# These commands should operate Shutter1
-ShutterOpen1
-ShutterPosition1 50
-ShutterClose1
+Now tell Tasmota that we have two shutters: ```ShutterRelay1 1``` ```ShutterRelay2 3```. This means that shutter1 is controlled by relay1 (and 2) - and shutter2 is controlled by relay3 (and 4).
 
-ShutterRelay2 3     # Shutter2 will use relay 3 and relay4.
-ShutterMode2 1      # Mode 1: relay3 = up, relay4 = down.
-```
+Configure ```ShutterMode1 1``` ```ShutterMode2 1```. This means that Relay1 and Relay3 move the shutters Up, and Relay2 and Relay4 move the shutters Down.
 
-You should now calibrate the shutter. At minimum, set the open and close times in seconds.
-```
-ShutterOpenDuration1 9.5
-ShutterCloseDuration1 8.5
-```
+Finally, we need to tell Tasmota how many seconds it takes to open and close the Shutters: ```ShutterOpenDuration1 9.5``` ```ShutterCloseDuration1 8.5``` ```ShutterOpenDuration2 12.3``` ```ShutterCloseDuration1 10.9```.
 
-To do the job properly, consult the calibration instructions and videos [here](https://tasmota.github.io/docs/Blinds-and-Shutters/#button-control).
+Now, try some of these commands: ```ShutterOpen1``` ```ShutterPosition1 50``` ```ShutterClose1```.
 
-## How it works
-This uses the method described [here](https://github.com/GitHobi/Tasmota/wiki/Somfy-RTS-support-with-Tasmota#using-rules-to-control-blinds), except that the rules are implemented in Berry rather than Tasmota rules.
+### Using rules to control blinds
+Tasmota controls the blinds by switching the assigned relays on and off. RFtxSMFY.be sets up rules so that when Tasmota switches an assigned realy, an RFtxSMFY command is generates to move the blind. You don't need to enter these rules, they are included in the RFtxSMFY.be script.
 
-Tasmota Shutter1 (in ShutterMode 1) uses relay1 for up and relay2 for down.
-When relay1 turns on, we need to send a Somfy up command.
-When relay2 turns on, we need to send a Somfy down command.
-When relay1 or relay2 turn off, we might need to send a Somfy stop command, but only if we think the shutter is currently moving.
-If we send a 'Stop' when the shutter is stopped, the Somfy will interpret it as a 'Go-My' command.
-So, don't send a 'Stop' if the shutter position is 0% or 100%.
-This requires that the shutter has been reasonably calibrated, eg: ```ShutterOpenDuration1 9.5``` ```ShutterCloseDuration1 8.5```.
+The main problem is that Tasmota tries to control the movement of the blinds on its own. So if you lift /lower the blind the whole way up / down, Tasmota will wait for a certain amount of time and then send a "stop" command. If at this point in time the blind has already stopped, this "stop" will actually cause a "go-my" function, not a "stop". So the rules in RFtxSMFY.be try to distinguish between a complete movement, where no "stop" is needed and movements where a "stop" needs to be executed.
+
+Tasmota Shutter1 (in ShutterMode 1) uses relay1 for up and relay2 for down.<br>
+When relay1 turns on, we need to send a Somfy up command.<br>
+When relay2 turns on, we need to send a Somfy down command.<br>
+When relay1 or relay2 turn off, we might need to send a Somfy stop command, but only if we think the shutter is currently moving.<br>
+If we send a 'Stop' when the shutter is stopped, the Somfy will interpret it as a 'Go-My' command.<br>
+So, don't send a 'Stop' if the shutter position is 0% or 100%.<br>
+This requires that the shutter has been reasonably calibrated, eg: ```ShutterOpenDuration1 9.5``` ```ShutterCloseDuration1 8.5```.<br>
+
 
 
 ---
