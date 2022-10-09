@@ -178,7 +178,7 @@ This script uses IRsend to generate the Somfy protocol bitstream.
 - I use IRsend, as it is the only way I know to get Tasmota to generate an accurately timed bitstream. Using Berry's gpio.digital_write() and tasmota.delay() does not have the required precision.
 - By default, the IRsend signal is modulated at 38kHz. Interestingly, you can feed that directly to an FS1000A and it ignores the modulation. However, I decided not to do that.
 - I set the modulation frequency to as low as it allows, which is 1kHz. If IRsend had a 'no modulation' option, that would be perfect.
-- At 1kHz, any "Mark" less than 500us will not show any modulation. To get longer Marks, I send multiple adjacent Marks.
+- At 1kHz, any "Mark" less than 500us will not show any modulation. To get longer Marks, I send multiple adjacent equal-sized Marks.
 - Sadly, the Marks have a tiny Space between them, and these appear as glitches on the IRsend signal.
 - The FS1000A filters out the glitches.
 - The CC1101 transmits some of them, but, as far as I can tell, the Somfy filters them out.
