@@ -23,8 +23,8 @@ A Berry script to to control Somfy powered blinds using Tasmota.
     - This adds the ```RFtxSMFY``` command to Tasmota.
   - Configure a GPIO pin for IRsend.
     - From the Tasmota WebUI: Configuration > Configure Module.
-  - Connect the 3 pins of the FS1000A to the ESP32 as shown [here](#using-an-fs1000a).
-    - If this is an unmodified 433.92 MHz FS1000A, then ensure the FS1000A is within 1 meter of the Somfy blind.
+  - Connect the ESP32 to the transmitter module
+    - If using an FS1000A, follow these [instructions](#using-an-fs1000a). If this is an unmodified 433.92 MHz FS1000A, then ensure the FS1000A is within 1 meter of the Somfy blind.
     - If using a CC1101, follow [these instructions](#using-a-cc1101).
 - Pair the ESP32/Tasmota with the blind:
   - Assign an Id to virtual controller #1 in the ESP32
