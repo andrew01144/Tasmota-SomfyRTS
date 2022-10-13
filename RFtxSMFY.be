@@ -119,6 +119,14 @@ var tasmotaShutterIntegration = 0   # Create rules to make Tasmota Shutters gene
     Thoughts, to do etc
         - Can I write the CC1101 support as a class, to hide all the private functions?
         - Read something from the CC1101, and report an error if it is not present.
+		
+		- The infinite loop in SpiWriteBytes() is ok.
+			If MISO never goes low, I get: BRY: Exception> 'timeout_error' - Berry code running for too long
+			But, should I use gpio.INPUT or gpio.INPUT_PULLUP on that pin?
+			I don't think it matters.
+			If the CC1101 is absent, gpio.INPUT just runs through the code, gpio.INPUT_PULLUP throws the BRY: Exception> 'timeout_error'
+		
+		
 -#
 
 import gpio
@@ -130,11 +138,11 @@ var CS_PIN   = -1
     
     
 def SpiInit()
-    # Get SPI pins from Tasmota Configuration
-    SCK_PIN  = gpio.pin(gpio.SPI_CLK)
-    MISO_PIN = gpio.pin(gpio.SPI_MISO)
-    MOSI_PIN = gpio.pin(gpio.SPI_MOSI)
-    CS_PIN   = gpio.pin(gpio.SPI_CS)
+    # Get SPI (actually, Software SPI, SSPI) pins from Tasmota Configuration
+    SCK_PIN  = gpio.pin(gpio.SSPI_SCLK)
+    MISO_PIN = gpio.pin(gpio.SSPI_MISO)
+    MOSI_PIN = gpio.pin(gpio.SSPI_MOSI)
+    CS_PIN   = gpio.pin(gpio.SSPI_CS)
 
     if hasCC1101 && (SCK_PIN < 0 || MISO_PIN < 0 || MOSI_PIN < 0 || CS_PIN < 0)
         print("RFtxSMFY Error: CC1101 SPI pin(s) not defined.")
@@ -158,7 +166,7 @@ end
 def SpiWriteBytes(bytes, nBytes)
     if !hasCC1101 return end
     gpio.digital_write(CS_PIN, 0);
-    while gpio.digital_read(MISO_PIN) end       # wait for MISO to go low. BRY: Exception> 'timeout_error' - Berry code running for too long
+    while gpio.digital_read(MISO_PIN) end       # wait for MISO to go low.
     for b: 0 .. nBytes-1
         var dataToGo = bytes[b]
         var mask = 0x80
