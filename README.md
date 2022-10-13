@@ -94,26 +94,26 @@ Edit ```RFtxSMFY.be``` to enable CC1101 support.
 var hasCC1101 = 1                   # Set to 0 for other Tx modules such as FS1000A.
 ```
 
-The CC1101 is configured via an SPI interface which needs to be wired to the ESP32. Choose the GPIO pins you want to use for this. I do not use the ESP32's SPI interface; I simply bit-bang GPIO pins to implement the SPI protocol, so you can choose pretty much any pins that are convenient. Using the Tasmota WebUI, choose Configuration > Configure Module, and define the SPI and IRsend pins.
+The CC1101 is configured via an SPI interface which needs to be wired to the ESP32. Choose the GPIO pins you want to use for this. I do not use the ESP32's SPI interface; I simply bit-bang GPIO pins to implement the SPI protocol, so you can choose pretty much any pins that are convenient. Using the Tasmota WebUI, choose Configuration > Configure Module, and define the SSPI (Software SPI) and IRsend pins.
 
 _The Relay GPIOs in the screenshot below are optional, and are defined for integration with the Tasmota Shutter and Blinds functionality. They are not wired to anything._
 
 For example:
 
-![image](https://user-images.githubusercontent.com/18399286/194719453-22dfa4a0-f396-4aeb-9ece-312576d346e7.png)
+![image](https://user-images.githubusercontent.com/18399286/195552747-7bcbfb0a-88f0-4802-bd58-5e804f7dd304.png)
 
 Then wire these 7 pins to the CC1101 module:
 
-| CC1101 | ESP32    |
-|--------|----------|
-| 3V3    | 3V3      |
-| SCK    | SPI CLK  |
-| MISO   | SPI MISO |
-| MOSI   | SPI MOSI |
-| CSN    | SPI CS   |
-| GDO0   | IRsend   |
-| GDO2   | not used |
-| GND    | GND      |
+| CC1101 | ESP32     |
+|--------|-----------|
+| 3V3    | 3V3       |
+| SCK    | SSPI SCLK |
+| MISO   | SSPI MISO |
+| MOSI   | SSPI MOSI |
+| CSN    | SSPI CS   |
+| GDO0   | IRsend    |
+| GDO2   | not used  |
+| GND    | GND       |
 
 ### Selecting a different frequency
 By default, the CC1101 will be configured to the Somfy frequency 433.42MHz. For troubleshooting, it can be useful to use the more standard 433.92MHz to work with other receivers. This can be set using the command ```RFtxSMFY {"UseSomfyFreq":0}```. To switch back to 433.42MHz use ```RFtxSMFY {"UseSomfyFreq":1}```,  or simply reboot the ESP32.
