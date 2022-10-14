@@ -100,7 +100,7 @@ _The Relay GPIOs in the screenshot below are optional, and are defined for integ
 
 For example:
 
-![image](https://user-images.githubusercontent.com/18399286/195552747-7bcbfb0a-88f0-4802-bd58-5e804f7dd304.png)
+![image](https://user-images.githubusercontent.com/18399286/195830142-52cdb940-b715-478a-81d9-111054d5ddaf.png)
 
 Then wire these 7 pins to the CC1101 module:
 
