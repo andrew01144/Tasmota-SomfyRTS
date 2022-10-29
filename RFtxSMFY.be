@@ -163,12 +163,12 @@ def SpiInit()
 end
 
 
-def SpiWriteBytes(bytes, nBytes)
+def SpiWriteBytes(data, nBytes)
     if !hasCC1101 return end
     gpio.digital_write(CS_PIN, 0);
     while gpio.digital_read(MISO_PIN) end       # wait for MISO to go low.
     for b: 0 .. nBytes-1
-        var dataToGo = bytes[b]
+        var dataToGo = data[b]
         var mask = 0x80
         for i: 1 .. 8
             gpio.digital_write(MOSI_PIN, dataToGo & mask ? 1 : 0)
