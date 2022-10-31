@@ -193,18 +193,18 @@ This requires that the shutter has been reasonably calibrated, eg: ```ShutterOpe
 
 This script uses IRsend to generate the Somfy protocol bitstream. I use IRsend, as it is the only way I know to get Tasmota to generate an accurately timed bitstream. Using Berry's gpio.digital_write() and tasmota.delay() does not have the required precision. IR signals use a 38kHz a carrier that is modulated by the bitstream. But we don't want this 38kHz carrier. I have three options to handle this:
 
-- Use 1kHz modulation, and use marks of less than 500us (default).<br>
+- Use a 1kHz carrier, and use marks of less than 500us (default).<br>
 At 1kHz, marks shorter than 500us will not show the carrier. Obviously, the spaces do not show any carrier.
 For marks longer than 500us, I use multiple shorter marks with zero-length spaces between them. eg: 1500 becomes 490,0,490,0,490
-Sadly, the zero-length spaces actually appear as 6us glitches. The FS1000A ignores the glitches, The CC1101 transmits some of the glitches, but the Somfy ignores them.
+Sadly, the zero-length spaces actually appear as 6us glitches. The FS1000A ignores the glitches. The CC1101 transmits some of the glitches, but the Somfy ignores them.
 You can optionally add a small RC low pass filter to the pin to remove the glitches (1k2, 47nF).<br>
 In ```RFtxSMFY.be```, set modFreq = 1 to enable the multi-mark logic.
 
-- Use default 38k modulation anyway.<br>
+- Use the default 38k carrier.<br>
 It turns out that the FS1000A ignores the 38kHz modulation (not suitable for CC1101).<br>
 In ```RFtxSMFY.be```, set modFreq = 0 to select default 38kHz carrier, and disable the multi-mark logic.
 
-- Disable IR_SEND_USE_MODULATION (preferred).<br>
+- Disable the carrier (preferred).<br>
 Build the Tasmota image with "#define IR_SEND_USE_MODULATION 0".<br>
 In ```RFtxSMFY.be```, set modFreq = 0 to disable the multi-mark logic.
 
