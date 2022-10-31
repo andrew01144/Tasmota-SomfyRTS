@@ -12,32 +12,36 @@ A Berry script to to control Somfy powered blinds using Tasmota.
   - It is implemented as a Tasmota Berry script. It is *not* a fork of Tasmota, so should be compatible with future versions of Tasmota.
   - It requires an ESP32 in order to provide the Berry scripting language.
   - It requires the -ir version of the tasmota32 binary in order to support IRsend's Raw format, because it uses Tasmota's IRsend command to generate the Somfy RTS protocol bit stream. 
-  - It can be integrated into Tasmota's [Shutters and Blinds](https://tasmota.github.io/docs/Blinds-and-Shutters/) functionality by following [these instructions](#integration-with-tasmota-shutters-and-blinds), but this will require a custom build of Tasmota to include both IR and Shutters.
+  - It can be integrated into Tasmota's [Shutters and Blinds](https://tasmota.github.io/docs/Blinds-and-Shutters/) functionality.
 
-  
-## To demonstrate operation
-- Set up the Tasmota device:
-  - Take an ESP32 module and install tasmota32-ir.bin V12.0.2 or later.
-  - Upload these scripts ```RFtxSMFY.be``` and ```autoexec.be``` to Tasmota's file system.
-    - From the Tasmota WebUI: Consoles > Manage File system > Choose File.
-    - This adds the ```RFtxSMFY``` command to Tasmota.
-  - Configure a GPIO pin for IRsend.
-    - From the Tasmota WebUI: Configuration > Configure Module.
-  - Connect the ESP32 to the transmitter module
-    - If using an FS1000A, connect the ESP32's ```GND, 5V, IRsend``` to the FS1000A's ```GND, Vcc, Data```. If this is an unmodified 433.92 MHz FS1000A, then ensure it is within 1 meter of the Somfy blind. More details [here](#using-an-fs1000a). 
-    - If using a CC1101, follow [these instructions](#using-a-cc1101).
-- Pair the ESP32/Tasmota with the blind:
-  - Assign an Id to virtual controller #1 in the ESP32
-    - Execute this Tasmota command: ```RFtxSMFY {"Idx":1,"Id":123,"RollingCode":1}```
-    - *To execute a Tasmota command, paste it into the WebGUI Console, or send it via http or mqtt.*
-  - Take your existing Somfy remote control, and press and hold the PROG button for 2 seconds. The blind should jog up and down.
-    - *The PROG button is on the back of the controller and requires a paperclip to press it.*
-  - Execute this Tasmota command: ```RFtxSMFY {"Idx":1,"Button":8}```. The blind should jog up and down.
-    - The blind is now paired with virtual controller #1 with the Id 123.
-    - Repeat this procedure with a different Idx and Id for each blind you want to control.
-- Try controlling the blind:
-  - Roll up: ```RFtxSMFY {"Idx":1,"Button":2}```
-  - Roll down: ```RFtxSMFY {"Idx":1,"Button":4}```
+
+ 
+> ## Getting started
+> - Set up the Tasmota device:
+>   - Take an ESP32 module and install tasmota32-ir.bin V12.0.2 or later.
+>   - Upload these scripts ```RFtxSMFY.be``` and ```autoexec.be``` to Tasmota's file system.
+>     - From the Tasmota WebUI: Consoles > Manage File system > Choose File.
+>     - This adds the ```RFtxSMFY``` command to Tasmota.
+>   - Configure a GPIO pin for IRsend.
+>     - From the Tasmota WebUI: Configuration > Configure Module.
+>   - Connect the ESP32 to the transmitter module
+>     - If using an FS1000A, connect the ESP32's ```GND, 5V, IRsend``` to the FS1000A's ```GND, Vcc, Data```. If this is an unmodified 433.92 MHz FS1000A, then ensure it is within 1 meter of the Somfy blind. More details [here](#using-an-fs1000a). 
+>     - If using a CC1101, follow [these instructions](#using-a-cc1101).
+> - Pair the ESP32/Tasmota with the blind:
+>   - Assign an Id to virtual controller #1 in the ESP32
+>     - Execute this Tasmota command: ```RFtxSMFY {"Idx":1,"Id":123,"RollingCode":1}```
+>     - *To execute a Tasmota command, paste it into the WebGUI Console, or send it via http or mqtt.*
+>   - Take your existing Somfy remote control, and press and hold the PROG button for 2 seconds. The blind should jog up and down.
+>     - *The PROG button is on the back of the controller and requires a paperclip to press it.*
+>   - Execute this Tasmota command: ```RFtxSMFY {"Idx":1,"Button":8}```. The blind should jog up and down.
+>     - The blind is now paired with virtual controller #1 with the Id 123.
+>     - Repeat this procedure with a different Idx and Id for each blind you want to control.
+> - Try controlling the blind:
+>   - Roll up: ```RFtxSMFY {"Idx":1,"Button":2}```
+>   - Roll down: ```RFtxSMFY {"Idx":1,"Button":4}```
+> - Next steps
+>   - Build a Tasmota image with [custom options](#building-a-tasmota-image-with-custom-options) and select ```modFreq = 0```.
+>   - Integrate with [Tasmota Shutters and Blinds](#integration-with-tasmota-shutters-and-blinds).
 
 ### Executing Tasmota commands
 This is standard Tasmota procedure. There are 3 ways to execute a command.
@@ -67,10 +71,27 @@ There are two ways of using ```RFtxSMFY```: Stateful or Stateless.
     - ```{"Idx":1,"Button":8,"nFrames":12,"Gap":72}``` Generates a long press (2 sec) PROG, may be useful for unlearning an Id.
   - ```UseSomfyFreq``` (1|0) For use with CC1101, 1: Transmit at 433.42MHz (default), 0: Transmit at 433.92MHz. Can be useful for troubleshooting.
 
+## Building a Tasmota image with custom options
+
+```tasmota32-ir.bin``` can be used to demonstrate the base functionality of sending Somfy commands, but you will need to build an image with custom options to get the all the functionality you might need. Creating an image with custom options is very easy using the excellent TasmoCompiler, or you can use ```tasmota32gen_custom-ir.bin``` included in this project. When building your own image, you will need these features:
+- IR Support - to get the IRsend *raw* capability.
+- Tasmota Shutters and Blinds. This is included in most images, but is excluded from the pre-compiled ```tasmota32-ir.bin```.
+- ```IR_SEND_USE_MODULATION 0``` to provide an unmodulated IRsend signal. See [discussion](#the-irsend-signal) below.
+
+Go to the [TasmoCompiler](https://gitpod.io/#https://github.com/benzino77/tasmocompiler)<br>
+Select features: ```ESP32: Generic```, Add: ```IR Support``` _(Shutters is included by default)_.<br>
+Add these custom parameters:
+```
+#define CODE_IMAGE_STR "custom-ir+nm"
+#define IR_SEND_USE_MODULATION 0
+```
+Download ```firmware.bin```.<br>
+In Tasmota, Upgrade Firmware using this image. Then set ```modFreq = 0``` in ```RFtxSMFY.be``` by editing this line:
+```
+var modFreq = 0
+```
 
 ---
----
-
 
 # 433MHz Transmitter Modules
 
@@ -126,17 +147,13 @@ You may want to use [Tasmota's support for Shutters and Blinds](https://tasmota.
 
 ### Enable the rules
 
-Edit RFtxSMFY.be to enable tasmotaShutterIntegration.
+Edit RFtxSMFY.be to enable Tasmota Shutter integration.
 ```
-var tasmotaShutterIntegration = 1   # Create rules to make Tasmota Shutters generate Somfy commands.
+var tasShutters = 1   # Create rules to make Tasmota Shutters generate Somfy commands.
 ```
-### Build a Tasmota binary with IR and Shutter support
+### Build a Tasmota image with IR and Shutter support
 
-tasmota32-ir.bin does not include support for Shutters, so you will need to build a custom Tasmota binary that includes both IR and Shutters.
-> Go to the excellent [TasmoCompiler](https://gitpod.io/#https://github.com/benzino77/tasmocompiler)<br>
-Select features: ```ESP32: Generic```, Add: ```IR Support``` _(Shutters is included by default)_.<br>
-Custom parameters: ```#define CODE_IMAGE_STR "custom-ir"```<br>
-Download firmware.bin
+tasmota32-ir.bin does not include support for Shutters, so you will need to build a custom Tasmota binary that includes both IR and Shutters using [this procedure](#building-a-tasmota-image-with-custom-options).
 
 ### Tasmota Configuration
 
@@ -174,15 +191,22 @@ This requires that the shutter has been reasonably calibrated, eg: ```ShutterOpe
 
 # The IRsend signal
 
-This script uses IRsend to generate the Somfy protocol bitstream.
-- I use IRsend, as it is the only way I know to get Tasmota to generate an accurately timed bitstream. Using Berry's gpio.digital_write() and tasmota.delay() does not have the required precision.
-- By default, the IRsend signal is modulated at 38kHz. Interestingly, you can feed that directly to an FS1000A and it ignores the modulation. However, I decided not to do that.
-- I set the modulation frequency to as low as it allows, which is 1kHz. If IRsend had a 'no modulation' option, that would be perfect.
-- At 1kHz, any "Mark" less than 500us will not show any modulation. To get longer Marks, I send multiple adjacent equal-sized Marks.
-- Sadly, the Marks have a tiny Space between them, and these appear as glitches on the IRsend signal.
-- The FS1000A filters out the glitches.
-- The CC1101 transmits some of the glitches, but, as far as I can tell, the Somfy filters them out.
-- So, it seems these glitches do not present a problem. If you want a completely clean signal, you can add a simple RC filter to the IRsend pin. A 1k2 resistor from the IRsend pin to the Tx module Data/GDO0 pin, and a 47nF capacitor from the Data/GDO0 pin to GND.
+This script uses IRsend to generate the Somfy protocol bitstream. I use IRsend, as it is the only way I know to get Tasmota to generate an accurately timed bitstream. Using Berry's gpio.digital_write() and tasmota.delay() does not have the required precision. IR signals use a 38kHz a carrier that is modulated by the bitstream. But we don't want this 38kHz carrier. I have three options to handle this:
+
+- Use 1kHz modulation, and use marks of less than 500us (default).<br>
+At 1kHz, marks shorter than 500us will not show the carrier. Obviously, the spaces do not show any carrier.
+For marks longer than 500us, I use multiple shorter marks with zero-length spaces between them. eg: 1500 becomes 490,0,490,0,490
+Sadly, the zero-length spaces actually appear as 6us glitches. The FS1000A ignores the glitches, The CC1101 transmits some of the glitches, but the Somfy ignores them.
+You can optionally add a small RC low pass filter to the pin to remove the glitches (1k2, 47nF).<br>
+In ```RFtxSMFY.be```, set modFreq = 1 to enable the multi-mark logic.
+
+- Use default 38k modulation anyway.<br>
+It turns out that the FS1000A ignores the 38kHz modulation (not suitable for CC1101).<br>
+In ```RFtxSMFY.be```, set modFreq = 0 to select default 38kHz carrier, and disable the multi-mark logic.
+
+- Disable IR_SEND_USE_MODULATION (preferred).<br>
+Build the Tasmota image with "#define IR_SEND_USE_MODULATION 0".<br>
+In ```RFtxSMFY.be```, set modFreq = 0 to disable the multi-mark logic.
 
 ![image](https://user-images.githubusercontent.com/18399286/194718690-cd2effd2-5192-44c0-89d2-3886c64b0a8f.png)
 
@@ -194,7 +218,7 @@ The top trace is the IRsend pin of the ESP which drives the GDO0 pin of the CC11
 
 I have been using this solution since July 2022 with 100% reliability. I use the Stateless mode, with my host computer maintaining the rolling code, current position, and calculating the move-time to travel to the requested position. I use an FS1000A modified to 433.42MHz, with an RC filter on the IRsend pin. Prior to this, I used an ESP8266 running my own code since May 2018, but have recently been on a mission to eliminate my own firmware from devices in my house.
 
-The other capabilities (Stateless mode, Integration with Tasmota Shutters and Blinds, CC1101, and using unfiltered IRsend) have all been tested, but not with months of usage.
+The other capabilities (Stateless mode, Integration with Tasmota Shutters and Blinds, CC1101, IR_SEND_USE_MODULATION=0, and using unfiltered IRsend) have all been tested, but not with months of usage.
 
 
 ---
