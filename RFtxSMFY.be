@@ -1,9 +1,10 @@
 
-
-
-var hasCC1101 = 0                   # Set to 0 for other Tx modules such as FS1000A.
-var tasmotaShutterIntegration = 0   # Create rules to make Tasmota Shutters generate Somfy commands.
-
+# Configuration options:
+var modFreq = 1
+        # Set to 1 for Tasmota images built with default options. (Default).
+        # Set to 0 for Tasmota images built with "#define IR_SEND_USE_MODULATION 0" (Preferred).
+var hasCC1101 = 0       # Set to 1 if using a CC1101 transmitter module.
+var tasShutters = 0     # Set to 1 to create rules to make Tasmota Shutters generate Somfy commands.
 
 
 
@@ -21,26 +22,13 @@ var tasmotaShutterIntegration = 0   # Create rules to make Tasmota Shutters gene
     Use the tasmota32-ir.bin image to get support for RAW in IRsend.
     Configure a pin for IRsend.
     Connect this pin to an FS1000A 433Mhz transmitter module.
-    Optional:
-        - Add this simple RC filter to the IRsend pin to remove unwanted 8us glitches/spaces.
-        - The filtered signal looks better on a logic analyzer, but is optional.
-        - The FS1000A Tx module ignores the 8us spaces.
-        - The CC1101 Tx module appears not to ignore these (I can see them on a receiver module) but the Somfy appears to ignore them.
-
-         ESP32                             FS1000A
-            5V ------------------------>-- Vcc
-        IRsend ->---/\/\/\/\----------->-- Data
-                      1k2        |
-                          47nF  ===
-                                 |
-           GND --------------------------- GND
-
 
  About the Somfy RTS protocol:
     The Somfy RTS protocol is used for controlling motorized blinds that are fitted with Somfy motors.
     Somfy uses 433.42MHz instead of the common 433.92MHz.
         A standard 433.92MHz transmitter like the FS1000A will work, but limits the range to 2 or 3 meters.
         The easiest solution is to buy "433.42MHz TO-39 SAW Resonator Crystals" on eBay to replace the 433.96MHz Resonator on the FS1000A.
+        Another solution is to use a CC1101 transmitter that has a programmable transmit frequency.
 
 
  Usage:
@@ -52,18 +40,33 @@ var tasmotaShutterIntegration = 0   # Create rules to make Tasmota Shutters gene
 
 
  How it works:
-    It uses Tasmota's IRsend in raw mode.
-    We don't want it modulated by IRsend's 38kHz carrier, but even with freq=1, IRsend still modulates at 1kHz.
-    (Though actually, it turns out that the FS1000A ignores the 38kHz modulation, so the workaround is overkill)
-    Workaround:
-        If I keep the marks shorter than 500us, then I won't see the 1kHz modulation. Obviously, I don't see any modulation on spaces.
-        For marks longer than 500us, I use multiple shorter marks with zero-length spaces between them.
+    It uses IRsend's raw mode, because that is a way to generate a time-accurate bitstream in Tasmota.
+    IR signals use a 38kHz a carrier that is modulated by the bitstream. But we don't want this 38kHz carrier.
+    There are three options to handle this:
+    
+    1) Use 1kHz modulation, and use marks of less than 500us (default).
+        At 1kHz, marks shorter than 500us will not show the carrier. Obviously, the spaces do not show any carrier.
+        For marks longer than 500us, use multiple shorter marks with zero-length spaces between them.
         eg: 1500 becomes 490,0,490,0,490
-        The zero-length spaces actually appears as 8us spaces, so optionally add a small RC low pass filter to the pin to remove them.
+        The zero-length spaces actually appear as 6us spaces or glitches.
+        The FS1000A ignores the glitches.
+        The CC1101 transmits some of the glitches, but the Somfy ignores them.
+        You can optionally add a small RC low pass filter to the pin to remove the glitches. (1k2, 47nF)
+        Set modFreq = 1 to enable the multi-mark logic.
+    
+    2) Use default 38k modulation anyway.
+        It turns out that the FS1000A ignores the 38kHz modulation.
+        Not suitable for CC1101.
+        Set modFreq = 0 to select default 38kHz carrier, and disable the multi-mark logic.
+
+    3) Disable IR_SEND_USE_MODULATION (preferred).
+        Build the Tasmota image with "#define IR_SEND_USE_MODULATION 0".
+        Set modFreq = 0 to disable the multi-mark logic.
 
  Acknowledgments:
     The Somfy frame building code in makeSomfyFrame() originates from https://github.com/Nickduino/Somfy_Remote.
     Additional description of the Somfy RTS protocol can be found here: https://pushstack.wordpress.com/somfy-rts-protocol/
+    Tasmota shutter integration: https://github.com/GitHobi/Tasmota/wiki/Somfy-RTS-support-with-Tasmota#using-rules-to-control-blinds
 
 -#
 
@@ -119,14 +122,14 @@ var tasmotaShutterIntegration = 0   # Create rules to make Tasmota Shutters gene
     Thoughts, to do etc
         - Can I write the CC1101 support as a class, to hide all the private functions?
         - Read something from the CC1101, and report an error if it is not present.
-		
-		- The infinite loop in SpiWriteBytes() is ok.
-			If MISO never goes low, I get: BRY: Exception> 'timeout_error' - Berry code running for too long
-			But, should I use gpio.INPUT or gpio.INPUT_PULLUP on that pin?
-			I don't think it matters.
-			If the CC1101 is absent, gpio.INPUT just runs through the code, gpio.INPUT_PULLUP throws the BRY: Exception> 'timeout_error'
-		
-		
+        
+        - The infinite loop in SpiWriteBytes() is ok.
+            If MISO never goes low, I get: BRY: Exception> 'timeout_error' - Berry code running for too long
+            But, should I use gpio.INPUT or gpio.INPUT_PULLUP on that pin?
+            I don't think it matters.
+            If the CC1101 is absent, gpio.INPUT just runs through the code, gpio.INPUT_PULLUP throws the BRY: Exception> 'timeout_error'
+        
+        
 -#
 
 import gpio
@@ -419,23 +422,32 @@ def frame_bin2text()
   end
   # print(list2)
 
-  # break up marks longer than 490us into multiple shorter marks, list2[] to list3[]
-  for len: list2
-    if len > 0
-      var n = 1
-      while (len / n) > 490
+  if modFreq == 1
+    # If modulation frequency == 1kHz, then marks can be up to 500us.
+    # Break up marks longer than maxMark microseconds into multiple shorter marks.
+    # Input list2[], output list3[].
+    for len: list2
+      if len > 0
+        var n = 1
+        while (len / n) > 490
         n += 1
-      end
-      var len2 = int(len / n) - 10
-      # Needs n marks of len2 uSec each
-      list3.push(len2)
-      for i: 2 .. n
+        end
+        var len2 = int(len / n) - 10
+        # Needs n marks of len2 uSec each
+        list3.push(len2)
+        for i: 2 .. n
         list3.push(-1)      # very short space (which will be filtered out in hardware)
         list3.push(len2)    # the mark
+        end
+      else
+        list3.push(len)
       end
-    else
-      list3.push(len)
     end
+  else
+    # Allow long marks.
+    # Suitable for 38kHz modulation with FS1000A Tx module.
+    # Or no modulation with any Tx module (set with #define IR_SEND_USE_MODULATION 0).
+    list3 = list2
   end
 
   # if the last element is a space (-ve), then remove it.
@@ -527,7 +539,7 @@ def somfy_stop()
   button = 1 # stop
   var listStr = makeMessage(id, rCode+1, button, nFrames, frameGap)
   if hasCC1101 SetTx() end
-  tasmota.cmd('IRsend 1,' + listStr)
+  tasmota.cmd('IRsend ' + str(modFreq) + ',' + listStr)
   if hasCC1101 SetSidle() end
 end
 
@@ -609,7 +621,7 @@ def somfy_cmd(cmd, ix, payload, payload_json)
     var listStr = makeMessage(id, rCode, button, nFrames, frameGap)
     # print(listStr)
     if hasCC1101 SetTx() end
-    tasmota.cmd('IRsend 1,' + listStr)
+    tasmota.cmd('IRsend ' + str(modFreq) + ',' + listStr)
     if hasCC1101 SetSidle() end
   end
 
@@ -673,7 +685,7 @@ tasmota.add_cmd('RFtxSMFY', somfy_cmd)
 -#
 
 
-if tasmotaShutterIntegration
+if tasShutters
 
     def sendCommand(idx, cmd)
         var b
