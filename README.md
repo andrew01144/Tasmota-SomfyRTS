@@ -218,7 +218,7 @@ The top trace is the IRsend pin of the ESP which drives the GDO0 pin of the CC11
 
 I have been using this solution since July 2022 with 100% reliability. I use the Stateless mode, with my host computer maintaining the rolling code, current position, and calculating the move-time to travel to the requested position. I use an FS1000A modified to 433.42MHz, with an RC filter on the IRsend pin. Prior to this, I used an ESP8266 running my own code since May 2018, but have recently been on a mission to eliminate my own firmware from devices in my house.
 
-The other capabilities (Stateless mode, Integration with Tasmota Shutters and Blinds, CC1101, IR_SEND_USE_MODULATION=0, and using unfiltered IRsend) have all been tested, but not with months of usage.
+The other capabilities (Stateful mode, Integration with Tasmota Shutters and Blinds, CC1101, IR_SEND_USE_MODULATION=0, and using unfiltered IRsend) have all been tested, but not with months of usage.
 
 
 ---
