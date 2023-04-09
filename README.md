@@ -80,7 +80,7 @@ There are two ways of using ```RFtxSMFY```: Stateful or Stateless.
 - ```IR_SEND_USE_MODULATION 0``` to provide an unmodulated IRsend signal. See [discussion](#the-irsend-signal) below.
 
 Go to the [TasmoCompiler](https://gitpod.io/#https://github.com/benzino77/tasmocompiler)<br>
-Select features: ```ESP32: Generic```, Add: ```IR Support``` _(Shutters is included by default)_.<br>
+Select features: ```ESP32: Generic```, Add: ```IR Support```, ```Shutters and Blinds```.<br>
 Add these custom parameters:
 ```
 #define CODE_IMAGE_STR "custom-ir+nm"
