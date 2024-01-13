@@ -164,8 +164,9 @@ In the Tasmota WebUI, go to Configuration > Configure Module, and set something 
 
 ![image](https://user-images.githubusercontent.com/18399286/194704956-8ba6e670-f78d-4bf7-aa54-30386042d936.png)
 
+Then run the commands ```Interlock 1,2 3,4```: This ensures relay 1 and 2 cannot be on together, likewise relay 3 and 4, and is required for ShutterMode 1. ```Interlock 1``` turns on the interlock mode.
 
-Then we need to enable Shutter support: ```SetOption80 1```.
+Now we need to enable Shutter support: ```SetOption80 1```.
 
 Now tell Tasmota that we have two shutters: ```ShutterRelay1 1``` ```ShutterRelay2 3```. This means that shutter1 is controlled by relay1 (and 2) - and shutter2 is controlled by relay3 (and 4).
 
