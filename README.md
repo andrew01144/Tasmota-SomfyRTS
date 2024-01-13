@@ -169,7 +169,7 @@ Then we need to enable Shutter support: ```SetOption80 1```.
 
 Now tell Tasmota that we have two shutters: ```ShutterRelay1 1``` ```ShutterRelay2 3```. This means that shutter1 is controlled by relay1 (and 2) - and shutter2 is controlled by relay3 (and 4).
 
-Configure ```ShutterMode1 1``` ```ShutterMode2 1```. This means that Relay1 and Relay3 move the shutters Up, and Relay2 and Relay4 move the shutters Down.
+Configure ```ShutterMode 1```. This means that Relay1 and Relay3 move the shutters Up, and Relay2 and Relay4 move the shutters Down.
 
 Finally, we need to tell Tasmota how many seconds it takes to open and close the Shutters: ```ShutterOpenDuration1 9.5``` ```ShutterCloseDuration1 8.5``` ```ShutterOpenDuration2 12.3``` ```ShutterCloseDuration1 10.9```.
 
