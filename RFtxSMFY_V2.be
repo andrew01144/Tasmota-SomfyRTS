@@ -1,10 +1,10 @@
 
 # Configuration options:
-var modFreq = 1
+var modFreq = 0
         # Set to 1 for Tasmota images built with default options. (Default).
         # Set to 0 for Tasmota images built with "#define IR_SEND_USE_MODULATION 0" (Preferred).
-var hasCC1101 = 0       # Set to 1 if using a CC1101 transmitter module.
-var tasShutters = 0     # Set to 1 to create rules to make Tasmota Shutters generate Somfy commands.
+var hasCC1101 = 1       # Set to 1 if using a CC1101 transmitter module.
+var tasShutters = 1     # Set to 1 to create rules to make Tasmota Shutters generate Somfy commands.
 
 
 
@@ -138,7 +138,10 @@ var SCK_PIN  = -1
 var MISO_PIN = -1
 var MOSI_PIN = -1
 var CS_PIN   = -1
-    
+
+var cc1101_freq = 0		# init state of CC1101. Can be 0, 42 or 92.
+var rfFreq = 92			# default 92. Can be set elsewhere.
+var protocol = ''
     
 def SpiInit()
     # Get SPI (actually, Software SPI, SSPI) pins from Tasmota Configuration
@@ -150,20 +153,10 @@ def SpiInit()
     if hasCC1101 && (SCK_PIN < 0 || MISO_PIN < 0 || MOSI_PIN < 0 || CS_PIN < 0)
         print("RFtxSMFY Error: CC1101 SPI pin(s) not defined.")
         hasCC1101 = 0
-        return
-    end
-    
-    gpio.pin_mode(CS_PIN, gpio.OUTPUT)
-    gpio.digital_write(CS_PIN, 1)
-    tasmota.delay(50)
-
-    gpio.pin_mode(SCK_PIN, gpio.OUTPUT)
-    gpio.pin_mode(MISO_PIN, gpio.INPUT)
-    gpio.pin_mode(MOSI_PIN, gpio.OUTPUT)
-
-    gpio.digital_write(SCK_PIN, 0)
-    gpio.digital_write(MOSI_PIN, 0)
+	end
 end
+
+
 
 
 def SpiWriteBytes(data, nBytes)
@@ -191,48 +184,63 @@ def SpiStrobe(addr)
     SpiWriteBytes([addr], 1)
 end
 
-
 def RegConfigSettings(freq)
-    # from SmartRF Studio 7, with modifications from Elechouse.
-
-    SpiStrobe(0x30)         # SRES
-    tasmota.delay(5)
-
-    SpiWriteReg(0x02,0x0D)   # IOCFG0       Elechouse uses 0x0D, SmartRF says 0x06.
-    SpiWriteReg(0x03,0x47)   # FIFOTHR
-    SpiWriteReg(0x08,0x32)   # PKTCTRL0     from Elechouse ccMode(1), SmartRF says 0x05
-    SpiWriteReg(0x0B,0x06)   # FSCTRL1
     
-    SpiWriteBytes([0x7E, 0x00,0xC0,0x00,0x00,0x00,0x00,0x00,0x00], 9)   # PATABLE, as per Elechouse.
+	gpio.pin_mode(CS_PIN, gpio.OUTPUT)
+	gpio.digital_write(CS_PIN, 1)
+	tasmota.delay(50)
 
-    if freq == 42
-        # 433.42MHz
-        SpiWriteReg(0x0D,0x10)   # FREQ2
-        SpiWriteReg(0x0E,0xAB)   # FREQ1
-        SpiWriteReg(0x0F,0x85)   # FREQ0
-    else
-        # 433.92MHz
-        SpiWriteReg(0x0D,0x10)   # FREQ2
-        SpiWriteReg(0x0E,0xB0)   # FREQ1
-        SpiWriteReg(0x0F,0x71)   # FREQ0
-    end
-    SpiWriteReg(0x10,0xF6)   # MDMCFG4
-    SpiWriteReg(0x11,0x83)   # MDMCFG3
-    SpiWriteReg(0x12,0x33)   # MDMCFG2      Elechouse uses 0xBF
-    SpiWriteReg(0x15,0x15)   # DEVIATN
-    SpiWriteReg(0x18,0x18)   # MCSM0
-    SpiWriteReg(0x19,0x16)   # FOCCFG
-    SpiWriteReg(0x20,0xFB)   # WORCTRL
-    SpiWriteReg(0x22,0x11)   # FREND0
-    SpiWriteReg(0x23,0xE9)   # FSCAL3
-    SpiWriteReg(0x24,0x2A)   # FSCAL2
-    SpiWriteReg(0x25,0x00)   # FSCAL1
-    SpiWriteReg(0x26,0x1F)   # FSCAL0
-    SpiWriteReg(0x2C,0x81)   # TEST2
-    SpiWriteReg(0x2D,0x35)   # TEST1
-    SpiWriteReg(0x2E,0x09)   # TEST0
+	gpio.pin_mode(SCK_PIN, gpio.OUTPUT)
+	gpio.pin_mode(MISO_PIN, gpio.INPUT)
+	gpio.pin_mode(MOSI_PIN, gpio.OUTPUT)
 
-    SpiStrobe(0x36)         # SIDLE     seems sensible to do this at this time.
+	gpio.digital_write(SCK_PIN, 0)
+	gpio.digital_write(MOSI_PIN, 0)
+
+	# from SmartRF Studio 7, RegConfigSettings(), with modifications from Elechouse.
+
+	SpiStrobe(0x30)         # SRES
+	tasmota.delay(5)
+
+	SpiWriteReg(0x02,0x0D)   # IOCFG0       Elechouse uses 0x0D, SmartRF says 0x06.
+	SpiWriteReg(0x03,0x47)   # FIFOTHR
+	SpiWriteReg(0x08,0x32)   # PKTCTRL0     from Elechouse ccMode(1), SmartRF says 0x05
+	SpiWriteReg(0x0B,0x06)   # FSCTRL1
+	
+	SpiWriteBytes([0x7E, 0x00,0xC0,0x00,0x00,0x00,0x00,0x00,0x00], 9)   # PATABLE, as per Elechouse.
+
+	if freq == 42
+		# 433.42MHz
+print('Setting 433.42MHz/Somfy')
+		SpiWriteReg(0x0D,0x10)   # FREQ2
+		SpiWriteReg(0x0E,0xAB)   # FREQ1
+		SpiWriteReg(0x0F,0x85)   # FREQ0
+	else
+		# 433.92MHz
+print('Setting 433.92MHz/Normal')
+		SpiWriteReg(0x0D,0x10)   # FREQ2
+		SpiWriteReg(0x0E,0xB0)   # FREQ1
+		SpiWriteReg(0x0F,0x71)   # FREQ0
+	end
+	SpiWriteReg(0x10,0xF6)   # MDMCFG4
+	SpiWriteReg(0x11,0x83)   # MDMCFG3
+	SpiWriteReg(0x12,0x33)   # MDMCFG2      Elechouse uses 0xBF
+	SpiWriteReg(0x15,0x15)   # DEVIATN
+	SpiWriteReg(0x18,0x18)   # MCSM0
+	SpiWriteReg(0x19,0x16)   # FOCCFG
+	SpiWriteReg(0x20,0xFB)   # WORCTRL
+	SpiWriteReg(0x22,0x11)   # FREND0
+	SpiWriteReg(0x23,0xE9)   # FSCAL3
+	SpiWriteReg(0x24,0x2A)   # FSCAL2
+	SpiWriteReg(0x25,0x00)   # FSCAL1
+	SpiWriteReg(0x26,0x1F)   # FSCAL0
+	SpiWriteReg(0x2C,0x81)   # TEST2
+	SpiWriteReg(0x2D,0x35)   # TEST1
+	SpiWriteReg(0x2E,0x09)   # TEST0
+
+	SpiStrobe(0x36)         # SIDLE     seems sensible to do this at this time.
+	
+	cc1101_freq = freq
 end
 
 
@@ -249,17 +257,21 @@ def SetSidle()
 end
 
 
-#-
-    # example init
-    SpiInit()
-    if useSomfyFreq
-        RegConfigSettings(42)
-    else
-        RegConfigSettings(0)
-    end
-    SetTx()
-    # SetSidle()
--#
+def myIrSend(listStr)
+	if hasCC1101 && cc1101_freq == 0
+		SpiInit()	# avoid calling this as it has a delay in it.
+		RegConfigSettings(rfFreq)
+	end
+	if hasCC1101 && cc1101_freq != rfFreq
+		RegConfigSettings(rfFreq)
+	end
+	
+    if hasCC1101 SetTx() end
+    tasmota.cmd('IRsend ' + str(modFreq) + ',' + listStr)
+    if hasCC1101 SetSidle() end
+end
+
+
 
 
 ############################################################################################################
@@ -277,15 +289,6 @@ import string
 
 
 var list1
-
-def markSpace(mark, len)
-  # Used by makeSomfyFrame()
-  if(mark)
-    list1.push(len)
-  else
-    list1.push(-len)
-  end
-end
 
 
 def makeSomfyFrame(rID, rCode, button, startFrame, nFrames)
@@ -318,12 +321,7 @@ def makeSomfyFrame(rID, rCode, button, startFrame, nFrames)
   end
   frame[1] |= (checksum & 0x0f)
 
-  if 0
-    # Debug: print each byte of frame
-    for i: 0 .. 6
-      print(string.format('%d: %02x', i, frame[i]))
-    end
-  end
+  # print(string.format(' pre-obfust: %02x %02x %02x %02x %02x %02x %02x\n', frame[0], frame[1], frame[2], frame[3], frame[4], frame[5], frame[6]))
 
   if 0
     # Debug: check the checksum, should be zero
@@ -340,15 +338,16 @@ def makeSomfyFrame(rID, rCode, button, startFrame, nFrames)
       frame[i] ^= frame[i-1]
     end
   end
+  # print(string.format('post-obfust: %02x %02x %02x %02x %02x %02x %02x\n', frame[0], frame[1], frame[2], frame[3], frame[4], frame[5], frame[6]))
 
   # Make nFrames frames
   for fn: 1 .. nFrames
-    if fn > 1   markSpace(0, 27000) end  # space between frames.
+    if fn > 1   list1.push(-27000) end  # space between frames.
     var nsync = 0
     if(startFrame && fn == 1)
       # first frame: hardware wake up pulse and fewer sync pulses
-      markSpace(1, 12000)
-      markSpace(0, 18000)
+	  list1.push( 12000)
+	  list1.push(-18000)
       nsync = 2
     else
       # follow-on frames: have more sync pulses
@@ -357,23 +356,23 @@ def makeSomfyFrame(rID, rCode, button, startFrame, nFrames)
 
     for i: 1 .. nsync
       # software sync pulses
-      markSpace(1, halfDigit * 4)
-      markSpace(0, halfDigit * 4)
+      list1.push( halfDigit * 4)
+      list1.push(-halfDigit * 4)
     end
-    markSpace(1, 4700) #4550
-    markSpace(0, halfDigit)
+    list1.push( 4700) #4550
+    list1.push(-halfDigit)
 
-    # The frame data: for each byte, for each bit.
+    # The frame data: for each of 7 bytes, for each bit. 7x8=56 bits.
     # Somfy uses Manchester encoding: rising edge = 1, falling edge = 0.
     for i: 0 .. 6
       var mask = 0x80
       while mask > 0
         if(frame[i] & mask)
-          markSpace(0, halfDigit)
-          markSpace(1, halfDigit)
+          list1.push(-halfDigit)
+          list1.push( halfDigit)
         else
-          markSpace(1, halfDigit)
-          markSpace(0, halfDigit)
+          list1.push( halfDigit)
+          list1.push(-halfDigit)
         end
         mask >>= 1
       end
@@ -385,7 +384,7 @@ end
 
 
 
-# For the IRsend raw/compressed format:
+# For the IRsend raw/condensed format:
 # Build a list of individual durations as we encounter them. Remember between calls to frame_bin2text().
 var codes
 
@@ -396,7 +395,7 @@ def frame_bin2text()
         like: [12000, -18000, 2560, -2560, 2560, -2560, 4700, -1280, 1280, -1280, 1280, -640, 640, -1280, 640, -640, 640, -640, 640,....]
         It may include adjacent marks and adjacent spaces, like: [... 640, 640, -640, -640, 640, -640 ...] This is not valid for IRsend.
 
-    Return: A string in Tasmota-compatible IRsend Raw/Compressed format.
+    Return: A string in Tasmota-compatible IRsend Raw/condensed format.
         like: "+470-1AbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbAbA-18000+416bDbDbDbDbD-2560DbDbDbDbDbDe+460bFbFbFbFbFbFbFbFbF-1280DbDb"
         Note: Marks longer than 490us (that's all of them, I think) will be broken into multiple short marks with very small spaces between,
         to stop IRsend's 1kHz modulation showing through.
@@ -452,12 +451,12 @@ def frame_bin2text()
 
   # if the last element is a space (-ve), then remove it.
   # (this makes it possible to append gaps (spaces) in following steps)
-  if list3[-1] < 0
+  if protocol == 'somfy' && list3[-1] < 0		# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     list3.remove(-1)        # could list3.resize(size(list3)-1)
   end
 
 
-  # Convert to text string in Tasmota IRsend Raw/Compressed format, list3[] to sOut.
+  # Convert to text string in Tasmota IRsend Raw/condensed format, list3[] to sOut.
   if 0
     # Plus/minus format, without compression.
     for len: list3
@@ -468,7 +467,7 @@ def frame_bin2text()
       end
     end
   else
-    # Compressed format
+    # condensed format
     # var codes = []                # build a list of individual durations as we encounter them.
     for len: list3
       var lenAbs = len
@@ -496,7 +495,7 @@ def frame_bin2text()
 end
 
 
-def makeMessage(id, rCode, button, nFrames, frameGap)
+def makeSomfyMessage(id, rCode, button, nFrames, frameGap)
 
   codes = []
   makeSomfyFrame(id, rCode, button, 1, 1)   # First frame, result in list1[]
@@ -530,17 +529,14 @@ var rCode
 var button
 var nFrames
 var frameGap
-var cc1101_initialized = 0
 var useSomfyFreq = 1    # set to 0 for 433.92MHz, can be useful for diagnostics.
 
 
 def somfy_stop()
   # Used by the "StopAfterMs" functionality, call-back from tasmota.set_timer()
   button = 1 # stop
-  var listStr = makeMessage(id, rCode+1, button, nFrames, frameGap)
-  if hasCC1101 SetTx() end
-  tasmota.cmd('IRsend ' + str(modFreq) + ',' + listStr)
-  if hasCC1101 SetSidle() end
+  var listStr = makeSomfyMessage(id, rCode+1, button, nFrames, frameGap)
+  myIrSend(listStr)
 end
 
 
@@ -551,6 +547,7 @@ def somfy_cmd(cmd, ix, payload, payload_json)
   button = 0
   nFrames = 3
   frameGap = 27
+  rfFreq = 42	# 433.42MHz
 
 
   # parse payload
@@ -564,7 +561,14 @@ def somfy_cmd(cmd, ix, payload, payload_json)
     rCode = int(payload_json.find("RollingCode"))
   end
   if payload_json != nil && payload_json.find("Button") != nil
-    button = int(payload_json.find("Button"))
+    button = payload_json.find("Button")
+    var  bTxt = string.tolower(button)
+    if   bTxt == 'stop' button = 1
+    elif bTxt == 'up'   button = 2
+    elif bTxt == 'down' button = 4
+    elif bTxt == 'prog' button = 8
+    else button = int(button)
+    end
   end
   if payload_json != nil && payload_json.find("nFrames") != nil
     nFrames = int(payload_json.find("nFrames"))
@@ -574,20 +578,10 @@ def somfy_cmd(cmd, ix, payload, payload_json)
   end
   if payload_json != nil && payload_json.find("UseSomfyFreq") != nil
     useSomfyFreq = int(payload_json.find("UseSomfyFreq"))
-    cc1101_initialized = 0
   end
-
-
-  if hasCC1101 && !cc1101_initialized
-    SpiInit()
-    if useSomfyFreq
-        RegConfigSettings(42)
-    else
-        RegConfigSettings(0)
-    end
-    cc1101_initialized = 1
-    # SetTx()
-  end
+  
+  protocol = 'somfy'
+  
 
 
   import persist
@@ -618,19 +612,19 @@ def somfy_cmd(cmd, ix, payload, payload_json)
   end
 
   if button != 0
-    var listStr = makeMessage(id, rCode, button, nFrames, frameGap)
-    # print(listStr)
-    if hasCC1101 SetTx() end
-    tasmota.cmd('IRsend ' + str(modFreq) + ',' + listStr)
-    if hasCC1101 SetSidle() end
+    var listStr = makeSomfyMessage(id, rCode, button, nFrames, frameGap)
+    myIrSend(listStr)
   end
 
   if idx > 0
     if button != 0
       persist.sState[idx][1] += 1
     end
+	persist.dirty()	 # persist.save() does not notice a change in arrays, so mark it explicitly.
+							# Not required V12.0.2. Required V14.2.0.
     persist.save()  # This is required in case the ESP32 reboots without a clean shutdown.
                     # comment out while testing to reduce ware on the flash
+					# At some future version, persist.save(true), as per https://github.com/arendst/Tasmota/pull/22246
   end
 
   # tasmota.resp_cmnd_done()    # causes {"IRSend":"Done"}
@@ -671,68 +665,216 @@ tasmota.add_cmd('RFtxSMFY', somfy_cmd)
 
 -#
 
+
+
 #-
-    This implements rules similar to https://github.com/GitHobi/Tasmota/wiki/Somfy-RTS-support-with-Tasmota#using-rules-to-control-blinds
+	Rules to connect Somfy blinds to the Tasmota Shutters functionality.
+	
+	Inspired by https://github.com/GitHobi/Tasmota/wiki/Somfy-RTS-support-with-Tasmota#configuring-tasmota
+	
+	This code has 3 main functions: I call these F1, F2 and F3.
+	F1 provides the connection from the Tasmota-Shutter functionality to the RFtxSMFY command.
+	F2 and F3 are nice-to-haves.
+	
+	
+	F1) Send Somfy Up/Down/Stop commands when the state of the Up or Down relays change.
+	Tasmota controls shutters and blinds by operating relays; usually one relay for Up, and another relay for Down.
+	We need to configure some dummy relays for the Shutters function to connect to.
+	Then, a relay change triggers a rule to send an RFtxSMFY command.
+	When the Up relay turns on, send a Somfy Up command.
+	When the Down relay turns on, send a Somfy Down command.
+	When either relay turns off, send a Somfy Stop command.
+	So far, so simple.
+	
+	
+	F2) Suppress 'move to configured position' (also known as the 'my' button) commands. 
+	Don't send a Somfy Stop when the blind has already stopped.
+	eg: ShutterClose will cause the Down relay to turn on for a period, then off.
+	This will generate a Somfy Down, then a Somfy Stop.
+	But if the Somfy blind receives a Stop when the blind is not moving, it interprets it as 'move to configured position'.
+	This is undesirable: ShutterClose would close the blind, then move to the configured position.
+	We can fix that with some simple logic:
+	When either relay turns off, send a Stop command UNLESS the position is 0 or 100, where the blind will have stopped itself.
+	
+	Actually, this is not really required, because RFtxSMFY is probably a unique controller ID, for which the 'configured position' has
+	not been configured. So, sending a Stop from this controller ID will be ignored.
+	
+	However, this is still a good thing to do. Without it, we might stop the blind just before it reaches the end-stop.
+	
+	
+	F3) Provide 'Calibrate' commands.
+	Send a 'calibrate' Up or Down command even if the blind is already at the 100 or 0 position.
+	(Added Jan-2024)
+	Consider:
+	Assume the blind is at position 90.
+	ShutterClose: Tasmota sends a Somfy Down, and when it thinks the blind has reached position 0, it updates the position to 0.
+	Next, we move the blind to position 60 using a Somfy hand controller.
+	ShutterClose: Tasmota thinks the blind is at 0, so does not send any commands, and the blind stays at 60.
+	
+	If we always send an Up or Down, even when Tasmota thinks the blind is at the end stop, it will resync in these cases.
+	
+	The logic for this is a bit more complex:
+	If we get a Shutter#Position event where the position is the same as the previously reported position,
+	and is 0 or 100, then consider sending an Down or Up command.
+	Look in the code for additional checks that need to be done.
 
-    Tasmota Shutter1 (in ShutterMode 1) uses relay1 for up and relay2 for down.
-    When relay1 turns on, we need to send a Somfy up command.
-    When relay2 turns on, we need to send a Somfy down command.
-    When relay1 or relay2 turn off, we might need to send a Somfy stop command, but only if we think the shutter is currently moving.
-    If we send a 'Stop' when the shutter is stopped, the Somfy will interpret it as a 'Go-My' command.
-    So, don't send a 'Stop' if the shutter position is 0% or 100%.
-    
-    This requires that the shutter has been reasonably calibrated, eg: ShutterOpenDuration1 9.5; ShutterCloseDuration1 8.5
+
+
+
+	### History
+	2022-10-06 - First published integration with Tasmota Shutters.
+		Using method described in https://github.com/GitHobi/Tasmota/wiki/Somfy-RTS-support-with-Tasmota#configuring-tasmota 
+		Users report that it works, but I have not used it.
+	2024-01-15 - Configured Tasmota Shutters on my own system.
+		Benefits:
+			1. Simplification - action.pl (on my server) no longer needs to maintain state/position.
+			2. Tasmota supports realtime stop/start commands, whereas action.pl only provided go-to-position commands.
+		'calibrate' function is still provided by action.pl.
+	2024-01-21 - New Shutter Integration Berry code:
+		1. Provides 'calibrate' function.
+		2. Uses json data from the Shutter1#Position trigger, instead of a combination of Shutter1#Position and Power1#State triggers.
+
+
+	https://tasmota.github.io/docs/_media/berry_short_manual.pdf
+	https://berry.readthedocs.io/en/latest/source/en/Reference.html
+
 -#
-
 
 if tasShutters
 
-    def sendCommand(idx, cmd)
-        var b
-        if cmd == 'up'
-            b = 2
-        elif cmd == 'down'
-            b = 4
-        else # cmd == 'stop'
-            b = 1
-        end
-        # print('Somfy', idx, cmd, b)
-        somfy_cmd(0, 0, 0, {"Idx": idx, "Button": b} )
-        
+	
+	def sendCommand(idx, cmd, cal)
+	    # cal: nil or 'Calibrate'	
+		# print('--------- Somfy', idx, cmd)
+        somfy_cmd(0, 0, 0, {"Idx": idx, "Button": cmd} )
+		
+		if false
+			# optional diagnostic mqtt messages
+			import string
+			import mqtt
+			var logStr = string.format("%s,%d,%s,%s",
+				tasmota.time_str(tasmota.rtc()['local']),
+				idx+0, cmd, cal ? cal : '')
+
+			mqtt.publish('shutterlog/log', logStr)
+		end
     end
     
-    var position = [0, 0, 0, 0, 0]      # position[0] not used.
-    def shutterChange(idx, op, value)
-        # print("shutterChange", idx, op, value)
-        if op == 'position'
-            position[idx] = value
-        elif op == 'up' && value == 1
-            sendCommand(idx, op)
-        elif op == 'down' && value == 1
-            sendCommand(idx, op)
-        elif op == 'up' || op == 'down'
-            # Value must be 0, because 1 has been caught earlier, so Tasmota wants the shutter to stop.
-            # Don't send Stop command if shutter is fully open or fully closed.
-            # Note: ShutterX#Position must arrive before PowerX#State, and it does.
-            if position[idx] > 0 && position[idx] < 100
-                sendCommand(idx, 'stop')
-            end
-        end
-    end
+	#-
+		"Shutter is moving" can be determined from:
+			Relays: There is and up and a down relay. If either is ON, the shutter is moving. If both are OFF it is stopped.
+			Direction: 1:up, -1:down, 0:off.
+			We will use Direction, because it is provided along with Position and Target by the Shutter1#Position trigger.
+	-#
+	
+	var moveState = [0,0,0,0,0]		# previous Direction state, so we can detect a change. (index 0 is not used)
+	var cmndRcvd = [false, false, false, false, false]
+	
+	def shutterPos(v, trigger, msg)
+		# triggered by Shutter1#Position
+		# msg eg {"Shutter1":{"Position":0,"Direction":0,"Target":0,"Tilt":0}}
+		
+		#-
+			We have entered this function because we have received a Shutter Position update, this could be triggered by:
+				1) Any Shutter-move command for this Shutter, and a motor needs to be turned on or off.
+					Position != Target, and Direction != 0, and Direction has changed. We [probably] need to send a Somfy command.
+				2) Any Shutter-move command for this Shutter, even if it is already in the target position, and a motor does NOT need to be turned on or off.
+					Position == Target, and Direction == 0. If we are on an end-stop, we would like to send a calibrate Somfy command.
+				3) This Shutter is moving, and we are getting position updates.
+					Position != Target, and Direction != 0, and Direction has NOT changed. Not action required.
+				4) Another Shutter is moving; Tasmota sends updates on all Shutters when this is happening.
+					Position == Target, and Direction == 0. No action required.
+			Problem: It is very difficult to differentiate #4 from #2.
+		-#
+		
+		var idx = int(trigger[7])	# character at position 7 is idx
+		var s = msg["Shutter"..idx]
+		# print("============", idx, s["Direction"], s["Target"], s["Position"])
+		
+		if moveState[idx] != s["Direction"]
+			# Tasmota started or stopped a shutter motor, so send a Somfy up, down, or stop command.
+			if s["Direction"] > 0
+				sendCommand(idx, 'up')
+			elif s["Direction"] < 0
+				sendCommand(idx, 'down')
+			else
+				# Send a 'stop', unless Tasmota thinks the blind is already at the end-stop.
+				if s["Position"] > 0 && s["Position"] < 100
+					sendCommand(idx, 'stop')
+				end
+			end
+			moveState[idx] = s["Direction"]
+		else
+			#-
+				This is a Position update with no change to motors.
+				Either: We have received a move-to-position command, but Tasmota thinks the shutter
+					is already at that position, so does not turn on any motors.
+					In this case, and if it is at an end-stop, we would like to send a calibrate command.
+				Or: Another shutter is moving, and we are getting position updates on all shutters,
+					in which case we need to ignore it.
+			-#
+			
+			if false
+				# Method #1: Another shutter is moving, so don't send a calibrate.
+				# Problem: It omits the calibrate if both shutters have a command.
+				if s["Target"] == s["Position"] && (s["Position"] == 0 || s["Position"] == 100)
+					# We are sitting at an end-stop, so we may want to send a calibrate-move.
+					# If any [other] shutters are moving, then this is just a position update, NOT a move-to-position command.
+					var anyMoving = false
+					for m: moveState
+						if m != 0 anyMoving = true end
+					end
+					if !anyMoving
+						var dir = s["Position"] < 50 ? 'down' : 'up'
+						sendCommand(idx, dir, 'Calibrate')
+					end
+				end
+			else
+				# Method #2: Send a calibrate if we received a command for this shutter.
+				# Problem: This only works for mqtt commands, because I use an mqtt interposer to detect the command.
+				if (s["Position"] == 0 || s["Position"] == 100) && cmndRcvd[idx]
+					var dir = s["Position"] < 50 ? 'down' : 'up'
+					sendCommand(idx, dir, 'Calibrate')
+				end
+			end
+			
+		end
+		
+		cmndRcvd[idx] = false
+	end
+	
+	
+	import mqtt
+	import string
+	
+	def mqttIn(topic, x, payload)
+		# Purpose: Set a flag in cmndRcvd[] if we get a ShutterMove command. Used above in calibrate logic.
+		# All mqtt commands
+		topic = string.tolower(topic)
+		if string.find(topic, 'shutter') >= 0
+			# All Shutter commands.
+			# Now look for specific Shutter-Move commands. This might not be necessary.
+			var shutterCommands = ['ShutterOpen', 'ShutterClose', 'ShutterPosition', 'ShutterChange', 'ShutterToggle',
+				'ShutterToggleDir', 'ShutterStop', 'ShutterStopOpen', 'ShutterStopClose', 'ShutterStopPosition',
+				'ShutterStopToggle', 'ShutterStopToggleDir' ]
+			for c: shutterCommands
+				if string.find(topic, string.tolower(c)) >= 0
+					# print('------- Setting cmndRcvd for', c)
+					cmndRcvd[ int(topic[-1]) ] = true	# last char of topic is idx, eg ShutterClose1
+					break
+				end
+			end
 
-    tasmota.add_rule("Shutter1#Position", def (value) shutterChange(1, 'position', value) end )
-    tasmota.add_rule("Shutter2#Position", def (value) shutterChange(2, 'position', value) end )
-    tasmota.add_rule("Shutter3#Position", def (value) shutterChange(3, 'position', value) end )
-    tasmota.add_rule("Shutter4#Position", def (value) shutterChange(4, 'position', value) end )
-    tasmota.add_rule("Power1#State",      def (value) shutterChange(1, 'up',       value) end )
-    tasmota.add_rule("Power2#State",      def (value) shutterChange(1, 'down',     value) end )
-    tasmota.add_rule("Power3#State",      def (value) shutterChange(2, 'up',       value) end )
-    tasmota.add_rule("Power4#State",      def (value) shutterChange(2, 'down',     value) end )
-    tasmota.add_rule("Power5#State",      def (value) shutterChange(3, 'up',       value) end )
-    tasmota.add_rule("Power6#State",      def (value) shutterChange(3, 'down',     value) end )
-    tasmota.add_rule("Power7#State",      def (value) shutterChange(4, 'up',       value) end )
-    tasmota.add_rule("Power8#State",      def (value) shutterChange(4, 'down',     value) end )
-
+		end
+		return false	# 'return false' allows Tasmota to process the message, else it will be discarded.
+	end
+	
+	
+	mqtt.subscribe('cmnd/' + tasmota.cmd('Topic', true)['Topic'] + '/+', mqttIn)	# Interpose all mqtt commands to this node.
+    tasmota.add_rule("Shutter1#Position", shutterPos )
+	tasmota.add_rule("Shutter2#Position", shutterPos )
+	tasmota.add_rule("Shutter3#Position", shutterPos )
+	tasmota.add_rule("Shutter4#Position", shutterPos )
+	
+    
 end
-
-
