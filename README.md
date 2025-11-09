@@ -225,7 +225,6 @@ There are two ways of using `RFtxSMFY`: Stateful or Stateless.
   - `RFtxSMFY {"Idx":1,"Button":2}` Transmit 'Up' from virtual controller #1.
   - `RFtxSMFY {"Idx":1,"Button":4,"StopAfterMs":2500}` Transmit 'Down' from virtual controller #1, then transmit 'Stop' after 2.5 seconds.
   - You may need to know the current values of `Id` and `RollingCode`, for example, to transfer an existing virtual controller to a different ESP32. These values can be seen by viewing the `_persist.json` file in the Tasmota Manage File system Console.
-  - *I don't use Stateful mode, so it is less well tested than Stateless mode.*
 - **Stateless**: Supports any number of virtual controllers. The RollingCode must be maintained on the host that sends the commands to Tasmota. Increment the RollingCode once after each command, and twice for StopAfterMs. Stateless commands do not use the `Idx` parameter. Examples:
   - `RFtxSMFY {"Id":123,"RollingCode":6,"Button":2}`
   - `RFtxSMFY {"Id":123,"RollingCode":7,"Button":4,"StopAfterMs":2500}`
