@@ -20,7 +20,7 @@ A Berry script to to control Somfy powered blinds from Home Assistant using Tasm
     - This part of the code has been improved and tidied, but functionality is the same.
 
 ## Installation overview
-  - Use a multi-core ESP32, such as the ESP32 or ESP32-S3 (Not the ESP32-S2 or ESP32-C3).
+  - Use a multi-core ESP32, such as the ESP32 or ESP32-S3 (Not the ESP32-S2 or ESP32-C3). A 3D printable case is available from [Makerworld](https://makerworld.com/en/models/2281131).
   - Flash the ESP32 with Tasmota and connect it to a CC1101 transmitter module with 7 wires. (For some applications, the simpler FS1000A transmitter module may be sufficient. See [this discussion](#using-a-simple-fs1000a-transmitter-module).)
   - Download the Tasmota ESP32 firmware from this project, and upgrade your Tasmota using this image. Or, [build your own firmware](#building-you-own-firmware).
   - Download the Berry files from this project and upload them to your Tasmota's filesystem.
