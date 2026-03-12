@@ -18,6 +18,7 @@ A Berry script to to control Somfy powered blinds from Home Assistant using Tasm
     - This version (v1.2.x) uses persist.dirty(), which works from Tasmota v14.2.0, and possibly earlier releases.
   - Tasmota Shutters and Blinds integration:
     - This part of the code has been improved and tidied, but functionality is the same.
+  - [Star-History](https://www.star-history.com/?repos=andrew01144%2FTasmota-SomfyRTS&type=date&legend=top-left)
 
 ## Installation overview
   - Use a multi-core ESP32, such as the ESP32 or ESP32-S3 (Not the ESP32-S2 or ESP32-C3). A 3D printable case is available from [Makerworld](https://makerworld.com/en/models/2281131).
