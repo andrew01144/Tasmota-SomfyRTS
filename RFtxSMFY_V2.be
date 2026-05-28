@@ -870,7 +870,7 @@ if tasShutters
 	end
 	
 	
-	mqtt.subscribe('cmnd/' + tasmota.cmd('Topic', true)['Topic'] + '/+', mqttIn)	# Interpose all mqtt commands to this node.
+	mqtt.subscribe('cmnd/' + tasmota.cmd('Topic', true)['Topic'] + '/#', mqttIn)	# Interpose all mqtt commands to this node.
     tasmota.add_rule("Shutter1#Position", shutterPos )
 	tasmota.add_rule("Shutter2#Position", shutterPos )
 	tasmota.add_rule("Shutter3#Position", shutterPos )
